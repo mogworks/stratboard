@@ -15,7 +15,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import { Role } from '@/pixi/role'
-  import { getScale, YmToPx } from '@/pixi/utils'
+  import { getScale, YmToPx, YmToPxMap } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
@@ -79,7 +79,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
     const squareMask = new Graphics()
     const width = 40 * YmToPx
-    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.rect(-width / 2 + 0.01 * YmToPxMap[50], -width / 2 + 0.01 * YmToPxMap[50], width, width)
     squareMask.fill({ color: 'white' })
     container.mask = squareMask
     container.addChild(squareMask)
