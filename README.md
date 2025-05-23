@@ -1,5 +1,7 @@
 # Stratboard
 
+[English](./README_en.md) | [Français](./README_fr.md) | [Deutsch](./README_de.md) | [日本語](./README_ja.md)
+
 本项目为[`xivstrat.com`](https://xivstrat.com)网站的战术制图板，在工作流中作用等同于`Photoshop`，不擅长`Photoshop`的人员可以借助本仓库绘制战术图
 
 ## 资源使用限制
