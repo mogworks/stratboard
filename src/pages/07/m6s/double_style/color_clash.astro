@@ -1,0 +1,181 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import floor_img from '/assets/07/m6s/floor_1@3x.png?url'
+  import morbol_omen_img from '/assets/fan/100_r25_y16@3x.png?url'
+  import succubus_omen_img from '/assets/fan/360_r20@3x.png?url'
+
+  const name = 'color_clash'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const bombOmenParams = [
+      { x: -8, y: -17 },
+      { x: -8, y: 0 },
+      { x: -8, y: 17 },
+      { x: -17, y: -8 },
+      { x: 0, y: -8 },
+      { x: 17, y: -8 },
+    ]
+
+    const morbolOmenParams = [
+      { x: 0, y: 20, r: Math.PI, end: 'blue' },
+      { x: 20, y: 0, r: Math.PI / 2, end: 'blue' },
+    ]
+
+    const succubusOmenParams = [
+      { x: -20, y: 0, end: 'purple' },
+      { x: 0, y: -20, end: 'purple' },
+    ]
+
+    const bombOmenTexture = await Assets.load(succubus_omen_img)
+    bombOmenParams.forEach((r) => {
+      const sprite = new Sprite(bombOmenTexture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set(getScale() * 0.75)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(sprite)
+    })
+
+    const morbolOmenTexture = await Assets.load(morbol_omen_img)
+    morbolOmenParams.forEach((r) => {
+      const sprite = new Sprite(morbolOmenTexture)
+      sprite.pivot.set(0, (-16 / getScale()) * YmToPx)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set(getScale() * 2)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      sprite.rotation = r.r
+      container.addChild(sprite)
+    })
+
+    const succubusOmenTexture = await Assets.load(succubus_omen_img)
+    succubusOmenParams.forEach((r) => {
+      const sprite = new Sprite(succubusOmenTexture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set((getScale() * 30) / 20)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(sprite)
+    })
+
+    const waymarks = await setWaymark(container, waymarkData, 1)
+    waymarks.get('Three')!.fgSprite!.rotation = -Math.PI / 4
+
+    container.rotation = Math.PI / 4
+
+    const mask = new Graphics()
+    mask.ellipse(app.screen.width / 2, app.screen.height / 2 + 220, 200, 120)
+    mask.fill({ color: 'white' })
+    app.stage.mask = mask
+    app.stage.addChild(mask)
+
+    // const roleParams: { type: RoleType; tag: string; r: number; x: number; y: number }[] = [
+    //   { type: 'tank', tag: 'MT', r: -Math.PI / 4, x: 8.02, y: 18.78 },
+    //   { type: 'melee', tag: 'D1', r: -Math.PI / 4, x: 9.78, y: 17.02 },
+    //   { type: 'tank', tag: 'ST', r: -Math.PI / 4, x: 17.02, y: 9.78 },
+    //   { type: 'melee', tag: 'D2', r: -Math.PI / 4, x: 18.78, y: 8.02 },
+    //   { type: 'healer', tag: 'H1', r: -Math.PI / 4, x: 11.02, y: 12.78 },
+    //   { type: 'ranged', tag: 'D3', r: -Math.PI / 4, x: 12.78, y: 11.02 },
+    //   { type: 'healer', tag: 'H2', r: -Math.PI / 4, x: 17.02, y: 18.78 },
+    //   { type: 'magic', tag: 'D4', r: -Math.PI / 4, x: 18.78, y: 17.02 },
+    // ]
+
+    // roleParams.forEach((r) => {
+    //   const role = new Role(r.type, r.tag)
+    //   role.scale.set(0.4)
+    //   role.position.set(r.x * YmToPx, r.y * YmToPx)
+    //   role.rotation = r.r
+    //   container.addChild(role)
+    // })
+
+    // const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+    //   { type: 'ranged', tag: 'D3', x: -5.75, y: 20.75 },
+    //   { type: 'melee', tag: 'D1', x: -4, y: 19 },
+    //   { type: 'healer', tag: 'H1', x: -7.5, y: 19 },
+    //   { type: 'tank', tag: 'MT', x: -5.75, y: 17.25 },
+    //   { type: 'magic', tag: 'D4', x: 5.75, y: 20.75 },
+    //   { type: 'healer', tag: 'H2', x: 4, y: 19 },
+    //   { type: 'melee', tag: 'D2', x: 7.5, y: 19 },
+    //   { type: 'tank', tag: 'ST', x: 5.75, y: 17.25 },
+    // ]
+
+    // roleParams.forEach((r) => {
+    //   const role = new Role(r.type, r.tag)
+    //   role.scale.set(0.4)
+    //   role.position.set(app.screen.width / 2 + r.x * YmToPx, app.screen.height / 2 + r.y * YmToPx)
+    //   app.stage.addChild(role)
+    // })
+
+    const roleParams: { type: RoleType; tag: string; r: number; x: number; y: number }[] = [
+      { type: 'healer', tag: 'H1', r: -Math.PI / 4, x: 8.02, y: 18.78 },
+      { type: 'melee', tag: 'D1', r: -Math.PI / 4, x: 9.78, y: 17.02 },
+      { type: 'healer', tag: 'H2', r: -Math.PI / 4, x: 17.02, y: 9.78 },
+      { type: 'melee', tag: 'D2', r: -Math.PI / 4, x: 18.78, y: 8.02 },
+      { type: 'tank', tag: 'MT', r: -Math.PI / 4, x: 11.02, y: 12.78 },
+      { type: 'magic', tag: 'D4', r: -Math.PI / 4, x: 12.78, y: 11.02 },
+      { type: 'tank', tag: 'ST', r: -Math.PI / 4, x: 17.02, y: 18.78 },
+      { type: 'ranged', tag: 'D3', r: -Math.PI / 4, x: 18.78, y: 17.02 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      role.rotation = r.r
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

@@ -1,0 +1,180 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { DropShadowFilter } from 'pixi-filters'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import gimme_cat_img from '/assets/07/m6s/adds/gimme_cat.png?url'
+  import mu_img from '/assets/07/m6s/adds/mu.png?url'
+  import yan_img from '/assets/07/m6s/adds/yan.png?url'
+  import boss_img from '/assets/07/m6s/boss.png?url'
+  import floor_img from '/assets/07/m6s/floor_1@3x.png?url'
+
+  const name = 'wave1_solution_1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const boss_texture = await Assets.load(boss_img)
+    const boss = Sprite.from(boss_texture)
+    boss.anchor.set(0.5, 0.5)
+    boss.scale.set(0.02)
+    boss.position.set(7.5 * YmToPx, -2 * YmToPx)
+    const bossShadow = Sprite.from(boss_texture)
+    bossShadow.anchor.set(0.5, 0.5)
+    bossShadow.scale.set(0.02 * 1.02)
+    bossShadow.position.set(7.5 * YmToPx, -2 * YmToPx)
+    bossShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(bossShadow)
+    container.addChild(boss)
+
+    const gimme_cat_texture = await Assets.load(gimme_cat_img)
+    const gimme_cat = Sprite.from(gimme_cat_texture)
+    gimme_cat.anchor.set(0.5, 0.5)
+    gimme_cat.scale.set(0.025)
+    gimme_cat.position.set(0, -10 * YmToPx)
+    const gimme_catShadow = Sprite.from(gimme_cat_texture)
+    gimme_catShadow.anchor.set(0.5, 0.5)
+    gimme_catShadow.scale.set(0.025 * 1.02)
+    gimme_catShadow.position.set(0, -10 * YmToPx)
+    gimme_catShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(gimme_catShadow)
+    container.addChild(gimme_cat)
+
+    const yan_texture = await Assets.load(yan_img)
+    const yan = Sprite.from(yan_texture)
+    yan.anchor.set(0.5, 0.5)
+    yan.scale.set(0.02)
+    yan.position.set(-10 * YmToPx, 0)
+    const yanShadow = Sprite.from(yan_texture)
+    yanShadow.anchor.set(0.5, 0.5)
+    yanShadow.scale.set(0.02 * 1.02)
+    yanShadow.position.set(-10 * YmToPx, 0)
+    yanShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(yanShadow)
+    container.addChild(yan)
+
+    const mu_texture = await Assets.load(mu_img)
+
+    const mu1 = Sprite.from(mu_texture)
+    mu1.anchor.set(0.5, 0.5)
+    mu1.scale.set(0.0175)
+    mu1.position.set(5 * YmToPx, 0)
+    const mu1Shadow = Sprite.from(mu_texture)
+    mu1Shadow.anchor.set(0.5, 0.5)
+    mu1Shadow.scale.set(0.0175 * 1.02)
+    mu1Shadow.position.set(5 * YmToPx, 0)
+    mu1Shadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(mu1Shadow)
+    container.addChild(mu1)
+
+    const mu2 = Sprite.from(mu_texture)
+    mu2.anchor.set(0.5, 0.5)
+    mu2.scale.set(0.0175)
+    mu2.position.set(10 * YmToPx, 0)
+    const mu2Shadow = Sprite.from(mu_texture)
+    mu2Shadow.anchor.set(0.5, 0.5)
+    mu2Shadow.scale.set(0.0175 * 1.02)
+    mu2Shadow.position.set(10 * YmToPx, 0)
+    mu2Shadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(mu2Shadow)
+    container.addChild(mu2)
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'ST', x: -10, y: 3 },
+      { type: 'healer', tag: '', x: -13, y: 0 },
+      { type: 'dps', tag: '', x: -10, y: -3 },
+      { type: 'tank', tag: 'MT', x: 7.5, y: 3 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

@@ -1,0 +1,166 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { DropShadowFilter } from 'pixi-filters'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import gimme_cat_img from '/assets/07/m6s/adds/gimme_cat.png?url'
+  import yan_img from '/assets/07/m6s/adds/yan.png?url'
+  import boss_img from '/assets/07/m6s/boss.png?url'
+  import floor_img from '/assets/07/m6s/floor_1@3x.png?url'
+  import cat_omen_img from '/assets/fan/360_r20@3x.png?url'
+  import omen_img from '/assets/game/bg/ex5/01_xkt_x6/common/vfx/eff/b3534wat01_a2@3x.png?url'
+
+  const name = 'wave3_solution_6'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const cat_omen_texture = await Assets.load(cat_omen_img)
+    const cat_omen = new Sprite(cat_omen_texture)
+    cat_omen.anchor.set(0.5, 0.5)
+    cat_omen.scale.set((getScale() * 6) / 20)
+    cat_omen.position.set(-3.5 * YmToPx, 12 * YmToPx)
+    container.addChild(cat_omen)
+
+    const omenParams = [
+      { x: -5.5, y: -19 },
+      { x: 5.5, y: -19 },
+      { x: -15.25, y: -19 },
+    ]
+    const omenTexture = await Assets.load(omen_img)
+    omenParams.forEach((o) => {
+      const omen = new Sprite(omenTexture)
+      omen.anchor.set(0.5, 0.5)
+      omen.position.set(o.x * YmToPx, o.y * YmToPx)
+      omen.scale.set(getScale())
+      container.addChild(omen)
+    })
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const boss_texture = await Assets.load(boss_img)
+    const boss = Sprite.from(boss_texture)
+    boss.anchor.set(0.5, 0.5)
+    boss.scale.set(0.02)
+    boss.position.set(0 * YmToPx, 9.5 * YmToPx)
+    const bossShadow = Sprite.from(boss_texture)
+    bossShadow.anchor.set(0.5, 0.5)
+    bossShadow.scale.set(0.02 * 1.02)
+    bossShadow.position.set(0 * YmToPx, 9.5 * YmToPx)
+    bossShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(bossShadow)
+    container.addChild(boss)
+
+    const yan_texture = await Assets.load(yan_img)
+    const yan = Sprite.from(yan_texture)
+    yan.anchor.set(0.5, 0.5)
+    yan.scale.set(0.02)
+    yan.position.set(-3 * YmToPx, -10 * YmToPx)
+    const yanShadow = Sprite.from(yan_texture)
+    yanShadow.anchor.set(0.5, 0.5)
+    yanShadow.scale.set(0.02 * 1.02)
+    yanShadow.position.set(-3 * YmToPx, -10 * YmToPx)
+    yanShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(yanShadow)
+    container.addChild(yan)
+
+    const gimme_cat_texture = await Assets.load(gimme_cat_img)
+    const gimme_cat = Sprite.from(gimme_cat_texture)
+    gimme_cat.anchor.set(0.5, 0.5)
+    gimme_cat.scale.set(0.025)
+    gimme_cat.position.set(-3.5 * YmToPx, 12 * YmToPx)
+    const gimme_catShadow = Sprite.from(gimme_cat_texture)
+    gimme_catShadow.anchor.set(0.5, 0.5)
+    gimme_catShadow.scale.set(0.025 * 1.02)
+    gimme_catShadow.position.set(-3.5 * YmToPx, 12 * YmToPx)
+    gimme_catShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(gimme_catShadow)
+    container.addChild(gimme_cat)
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'MT', x: -0.5, y: 14 },
+      { type: 'tank', tag: 'ST', x: -1.75, y: -7 },
+      { type: 'melee', tag: '', x: -4.25, y: -7 },
+      { type: 'healer', tag: '', x: 2, y: 14 },
+      { type: 'ranged', tag: 'D3', x: -10, y: 1 },
+      { type: 'magic', tag: 'D4', x: 10, y: 1 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

@@ -1,0 +1,181 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { DropShadowFilter } from 'pixi-filters'
+  import { Assets, Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import feather_ray_img from '/assets/07/m6s/adds/feather_ray.png?url'
+  import mu_img from '/assets/07/m6s/adds/mu.png?url'
+  import boss_img from '/assets/07/m6s/boss.png?url'
+  import floor_img from '/assets/07/m6s/floor_1@3x.png?url'
+  import omen_img from '/assets/game/bg/ex5/01_xkt_x6/common/vfx/eff/b3534wat01_a2@3x.png?url'
+  import tether_img from '/assets/game/vfx/channeling/eff/chn_tergetfix1f.png?url'
+
+  const name = 'wave2_solution_4'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const omenParams = [
+      { x: -5.5, y: -19 },
+      { x: 5.5, y: -19 },
+    ]
+    const omenTexture = await Assets.load(omen_img)
+    omenParams.forEach((o) => {
+      const omen = new Sprite(omenTexture)
+      omen.anchor.set(0.5, 0.5)
+      omen.position.set(o.x * YmToPx, o.y * YmToPx)
+      omen.scale.set(getScale())
+      container.addChild(omen)
+    })
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const techerParams = [{ x1: -10, y1: -5, x2: -15.25, y2: -19 }]
+    const tetherTexture = await Assets.load(tether_img)
+    techerParams.forEach((t) => {
+      const tether = new TilingSprite({
+        texture: tetherTexture,
+        width: (Math.sqrt((t.x1 - t.x2) ** 2 + (t.y1 - t.y2) ** 2) * YmToPx) / getScale(),
+        height: 64,
+      })
+      tether.anchor.set(0, 0.5)
+      tether.position.set(t.x1 * YmToPx, t.y1 * YmToPx)
+      tether.rotation = Math.atan2(t.y2 - t.y1, t.x2 - t.x1)
+      tether.scale.set(getScale())
+      container.addChild(tether)
+    })
+
+    const feather_ray_texture = await Assets.load(feather_ray_img)
+    const feather_rayParams = [{ x: -10, y: -5 }]
+    feather_rayParams.forEach((m) => {
+      const feather_ray = Sprite.from(feather_ray_texture)
+      feather_ray.anchor.set(0.5, 0.5)
+      feather_ray.scale.set(0.0225)
+      feather_ray.position.set(m.x * YmToPx, m.y * YmToPx)
+      const feather_rayShadow = Sprite.from(feather_ray_texture)
+      feather_rayShadow.anchor.set(0.5, 0.5)
+      feather_rayShadow.scale.set(0.0225 * 1.02)
+      feather_rayShadow.position.set(m.x * YmToPx, m.y * YmToPx)
+      feather_rayShadow.filters = [
+        new DropShadowFilter({
+          offset: { x: 0, y: 0 },
+          alpha: 0.7,
+          shadowOnly: true,
+        }),
+      ]
+      container.addChild(feather_rayShadow)
+      container.addChild(feather_ray)
+    })
+
+    const mu_texture = await Assets.load(mu_img)
+    const muParams = [
+      { x: -14, y: -1 },
+      { x: -14, y: -3.5 },
+    ]
+    muParams.forEach((m) => {
+      const mu = Sprite.from(mu_texture)
+      mu.anchor.set(0.5, 0.5)
+      mu.scale.set(0.0175)
+      mu.position.set(m.x * YmToPx, m.y * YmToPx)
+      const muShadow = Sprite.from(mu_texture)
+      muShadow.anchor.set(0.5, 0.5)
+      muShadow.scale.set(0.0175 * 1.02)
+      muShadow.position.set(m.x * YmToPx, m.y * YmToPx)
+      muShadow.filters = [
+        new DropShadowFilter({
+          offset: { x: 0, y: 0 },
+          alpha: 0.7,
+          shadowOnly: true,
+        }),
+      ]
+      container.addChild(muShadow)
+      container.addChild(mu)
+    })
+
+    const boss_texture = await Assets.load(boss_img)
+    const boss = Sprite.from(boss_texture)
+    boss.anchor.set(0.5, 0.5)
+    boss.scale.set(0.02)
+    boss.position.set(-11 * YmToPx, -1.5 * YmToPx)
+    const bossShadow = Sprite.from(boss_texture)
+    bossShadow.anchor.set(0.5, 0.5)
+    bossShadow.scale.set(0.02 * 1.02)
+    bossShadow.position.set(-11 * YmToPx, -1.5 * YmToPx)
+    bossShadow.filters = [
+      new DropShadowFilter({
+        offset: { x: 0, y: 0 },
+        alpha: 0.7,
+        shadowOnly: true,
+      }),
+    ]
+    container.addChild(bossShadow)
+    container.addChild(boss)
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'MT', x: -13, y: 2.5 },
+      { type: 'tank', tag: 'ST', x: -8, y: -2 },
+      { type: 'melee', tag: '', x: -10.5, y: 2.5 },
+      { type: 'ranged', tag: 'D3', x: -15.25, y: -19 },
+      { type: 'healer', tag: '', x: 6, y: 6 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

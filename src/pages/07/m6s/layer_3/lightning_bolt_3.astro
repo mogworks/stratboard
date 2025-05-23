@@ -1,0 +1,103 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkDataR180 } from '../_waymark'
+
+  import arrow_img from '/assets/07/m6s/layer_3/floor_3_arrow@3x.png?url'
+  import floor_img from '/assets/07/m6s/layer_3/floor_3@3x.png?url'
+  import target_img from '/assets/game/vfx/lockon/eff/m0922trg_t2w@3x.png?url'
+
+  const name = 'lightning_bolt_3'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const waymarks = await setWaymark(container, waymarkDataR180, 0.65)
+    waymarks.get('B')!.alpha = 0.1
+    waymarks.get('Three')!.alpha = 0.1
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'healer', tag: '', x: 6, y: -10 },
+      { type: 'magic', tag: '', x: -13, y: -7 },
+      { type: 'any', tag: '', x: -3, y: -9.2 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      role.rotation = Math.PI
+      container.addChild(role)
+    })
+
+    const targetTexture = await Assets.load(target_img)
+    const targetParams = [roleParams[0], roleParams[1]]
+    targetParams.forEach((r) => {
+      const target = new Sprite(targetTexture)
+      target.anchor.set(0.5, 0.5)
+      target.position.set(r.x * YmToPx, r.y * YmToPx + 1.5 * YmToPx)
+      target.scale.set(getScale(8))
+      target.rotation = Math.PI
+      container.addChild(target)
+    })
+
+    const arrowTexture = await Assets.load(arrow_img)
+    const arrow = Sprite.from(arrowTexture)
+    arrow.anchor.set(0.5, 0.5)
+    arrow.scale.set(getScale())
+    container.addChild(arrow)
+
+    container.rotation = Math.PI
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

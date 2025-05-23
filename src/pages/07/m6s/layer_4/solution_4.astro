@@ -1,0 +1,120 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import floor_img from '/assets/07/m6s/layer_4/floor_1@3x.png?url'
+  import stack_vfx_img from '/assets/game/bg/ex5/01_xkt_x6/common/vfx/eff/b3535ink01_a2@3x.png?url'
+  import fan_vfx_img from '/assets/game/vfx/monster/gimmick5/eff/x6r6_b2_g13c0w@3x.png?url'
+
+  const name = 'solution_4'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const waymarks = await setWaymark(container, waymarkData, 0.65)
+    waymarks.get('Two')!.alpha = 0.4
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const bossPosition = { x: -1.6, y: 13.5 }
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'MT', x: bossPosition.x - 3, y: bossPosition.y },
+      { type: 'tank', tag: 'ST', x: bossPosition.x + 3, y: bossPosition.y },
+      { type: 'melee', tag: 'D1', x: bossPosition.x - 1.2, y: bossPosition.y + 2.75 },
+      { type: 'melee', tag: 'D2', x: bossPosition.x + 1.2, y: bossPosition.y + 2.75 },
+      { type: 'healer', tag: 'H2', x: -11.5, y: -2 },
+      { type: 'magic', tag: 'D4', x: -13.5, y: 0 },
+      { type: 'healer', tag: 'H1', x: 10, y: -8 },
+      { type: 'ranged', tag: 'D3', x: 12.25, y: -9 },
+    ]
+
+    const stackVfxParams = [
+      { x: -19, y: -5 },
+      { x: -15.5, y: -9.5 },
+      { x: -12, y: -14 },
+      { x: -7.5, y: -10.5 },
+      { x: 19, y: 5 },
+      { x: 13, y: 4 },
+      { x: 19, y: -1 },
+      { x: 14, y: -3 },
+    ]
+    const stackVfxTexture = await Assets.load(stack_vfx_img)
+    stackVfxParams.forEach((r) => {
+      const stackVfx = Sprite.from(stackVfxTexture)
+      stackVfx.anchor.set(0.5, 0.5)
+      stackVfx.position.set(r.x * YmToPx, r.y * YmToPx)
+      stackVfx.scale.set(getScale())
+      stackVfx.rotation = Math.random() * Math.PI * 2
+      container.addChild(stackVfx)
+    })
+
+    const fan_vfx_texture = await Assets.load(fan_vfx_img)
+    const fanParams = [roleParams[0], roleParams[1], roleParams[2], roleParams[3]]
+    fanParams.forEach((r) => {
+      const fan = Sprite.from(fan_vfx_texture)
+      fan.pivot.set((-25 / getScale()) * YmToPx, 0)
+      fan.anchor.set(0.5, 0.5)
+      fan.scale.set(getScale())
+      fan.position.set(bossPosition.x * YmToPx, bossPosition.y * YmToPx)
+      fan.rotation = Math.atan2(r.y - bossPosition.y, r.x - bossPosition.x)
+      container.addChild(fan)
+    })
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

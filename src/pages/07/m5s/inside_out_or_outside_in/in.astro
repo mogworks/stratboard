@@ -1,0 +1,91 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M5S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import floor_img from '/assets/07/m5s/floor_3@3x.png?url'
+  import funkyfloor_img from '/assets/07/m5s/funky_floor_1@3x.png?url'
+  import vfx_img from '/assets/game/vfx/monster/gimmick5/eff/x6r5_b1_g03_c0x@3x.png?url'
+
+  const name = 'in'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const funky_floor_texture = await Assets.load(funkyfloor_img)
+    const funky_floor = Sprite.from(funky_floor_texture)
+    funky_floor.anchor.set(0.5, 0.5)
+    funky_floor.scale.set(getScale())
+    container.addChild(funky_floor)
+
+    await setWaymark(container, waymarkData, 0.5)
+
+    const squareMask1 = new Graphics()
+    const width1 = 40 * YmToPx
+    squareMask1.rect(-width1 / 2, -width1 / 2, width1, width1)
+    squareMask1.fill({ color: 'white' })
+    funky_floor.mask = squareMask1
+    container.addChild(squareMask1)
+
+    const vfx_Texture = await Assets.load(vfx_img)
+    const vfx = Sprite.from(vfx_Texture)
+    vfx.anchor.set(0.5, 0.5)
+    vfx.scale.set(getScale(90))
+    container.addChild(vfx)
+
+    const squareMask = new Graphics()
+    const width = 50 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // const circleMask = new Graphics()
+    // const radius = 540
+    // circleMask.circle(0, 0, radius)
+    // circleMask.fill({ color: 'white' })
+    // container.mask = circleMask
+    // container.addChild(circleMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

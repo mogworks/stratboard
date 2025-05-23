@@ -1,0 +1,136 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { DropShadowFilter } from 'pixi-filters'
+  import { Assets, Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import blue_end_img from '/assets/07/m6s/channeling/blue_end@5x.png?url'
+  import blue_tether_img from '/assets/07/m6s/channeling/blue@50x.png?url'
+  import purple_end_img from '/assets/07/m6s/channeling/purple_end@5x.png?url'
+  import purple_tether_img from '/assets/07/m6s/channeling/purple@50x.png?url'
+  import floor_img from '/assets/07/m6s/floor_2@3x.png?url'
+  import morbol_mark_img from '/assets/07/m6s/paint_mark/morbol@3x.png?url'
+  import morbol_omen_img from '/assets/fan/100_r25_y16@3x.png?url'
+
+  const name = 'morbol_morbol'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const morbolOmenParams = [
+      { x: 0, y: 20, r: Math.PI, end: 'blue' },
+      { x: -20, y: 0, r: -Math.PI / 2, end: 'purple' },
+    ]
+
+    const morbolOmenTexture = await Assets.load(morbol_omen_img)
+    morbolOmenParams.forEach((r) => {
+      const sprite = new Sprite(morbolOmenTexture)
+      sprite.pivot.set(0, (-16 / getScale()) * YmToPx)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set(getScale() * 2)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      sprite.rotation = r.r
+      container.addChild(sprite)
+    })
+
+    const purpleEndTexture = await Assets.load(purple_end_img)
+    const blueEndTexture = await Assets.load(blue_end_img)
+    morbolOmenParams.forEach((r) => {
+      const end = new Sprite(r.end === 'blue' ? blueEndTexture : purpleEndTexture)
+      end.anchor.set(0.5, 0.5)
+      end.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(end)
+    })
+
+    const purpleTetherTexture = await Assets.load(purple_tether_img)
+    const blueTetherTexture = await Assets.load(blue_tether_img)
+    morbolOmenParams.forEach((t) => {
+      const x = t.end === 'blue' ? 3.5 : -3.5
+      const tether = new TilingSprite({
+        texture: t.end === 'blue' ? blueTetherTexture : purpleTetherTexture,
+        width: Math.sqrt((t.x - x) ** 2 + t.y ** 2) * YmToPx,
+        height: 256 / 50,
+      })
+      tether.anchor.set(0, 0.5)
+      tether.position.set(x * YmToPx, 0)
+      tether.rotation = Math.atan2(t.y, t.x - x)
+      const shadow = new TilingSprite({
+        texture: t.end === 'blue' ? blueTetherTexture : purpleTetherTexture,
+        width: Math.sqrt((t.x - x) ** 2 + t.y ** 2) * YmToPx,
+        height: 256 / 50,
+      })
+      shadow.anchor.set(0, 0.5)
+      shadow.position.set(x * YmToPx, 0)
+      shadow.rotation = Math.atan2(t.y, t.x - x)
+      shadow.filters = [
+        new DropShadowFilter({
+          offset: { x: 0, y: 0 },
+          alpha: 0.7,
+          shadowOnly: true,
+        }),
+      ]
+      container.addChild(shadow)
+      container.addChild(tether)
+    })
+
+    const morbolMarkTexture = await Assets.load(morbol_mark_img)
+    morbolOmenParams.forEach((r) => {
+      const mark = new Sprite(morbolMarkTexture)
+      mark.anchor.set(0.5, 0.5)
+      mark.position.x = r.end === 'blue' ? 3.5 * YmToPx : -3.5 * YmToPx
+      mark.position.y = 0
+      mark.scale.set(getScale(20, 0.78))
+      container.addChild(mark)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

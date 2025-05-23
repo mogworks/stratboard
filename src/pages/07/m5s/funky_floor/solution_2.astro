@@ -1,0 +1,149 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M5S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+
+  import floor_img from '/assets/07/m5s/floor_3@3x.png?url'
+  import funky_floor_img from '/assets/07/m5s/funky_floor_2@3x.png?url'
+
+  const name = 'solution_2'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const funkyFloorTexture = await Assets.load(funky_floor_img)
+    const funkyFloor = Sprite.from(funkyFloorTexture)
+    funkyFloor.anchor.set(0.5, 0.5)
+    funkyFloor.scale.set(getScale())
+    container.addChild(funkyFloor)
+
+    await setWaymark(container, waymarkData, 0.5)
+
+    const squareMask = new Graphics()
+    const width = 50 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const squareMask1 = new Graphics()
+    squareMask1.rect(0, -5 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    squareMask1.rect(-5 * YmToPx, 0, 5 * YmToPx, 5 * YmToPx)
+    squareMask1.fill({ color: 'white' })
+    funkyFloor.mask = squareMask1
+    container.addChild(squareMask1)
+
+    const safeArea = new Graphics()
+    safeArea.rect(-15 * YmToPx, 10 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    safeArea.rect(10 * YmToPx, -15 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    safeArea.rect(-10 * YmToPx, -5 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    safeArea.rect(-5 * YmToPx, -10 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    safeArea.rect(0 * YmToPx, 5 * YmToPx, 5 * YmToPx, 5 * YmToPx)
+    safeArea.rect(5 * YmToPx, 0, 5 * YmToPx, 5 * YmToPx)
+    safeArea.stroke({ color: '#22c55e', width: 2 })
+    container.addChild(safeArea)
+
+    const dot = new Graphics()
+    dot.circle(-5 * YmToPx, -5 * YmToPx, 0.4 * YmToPx)
+    dot.circle(5 * YmToPx, 5 * YmToPx, 0.4 * YmToPx)
+    dot.fill({ color: '#db2777' })
+    dot.stroke({ color: '#ffffff', width: 1 })
+    container.addChild(dot)
+
+    const H1 = new Role('healer', 'H1')
+    H1.scale.set(0.4)
+    H1.position.set(-12.5 * YmToPx - 12, 12.5 * YmToPx)
+    container.addChild(H1)
+    const D3 = new Role('ranged', 'D3')
+    D3.scale.set(0.4)
+    D3.position.set(-12.5 * YmToPx + 12, 12.5 * YmToPx)
+    container.addChild(D3)
+
+    const H2 = new Role('healer', 'H2')
+    H2.scale.set(0.4)
+    H2.position.set(12.5 * YmToPx - 12, -12.5 * YmToPx)
+    container.addChild(H2)
+    const D4 = new Role('magic', 'D4')
+    D4.scale.set(0.4)
+    D4.position.set(12.5 * YmToPx + 12, -12.5 * YmToPx)
+    container.addChild(D4)
+
+    const MT = new Role('tank', 'MT')
+    MT.scale.set(0.4)
+    MT.position.set(-2.5 * YmToPx - 12, -7.5 * YmToPx)
+    container.addChild(MT)
+    const D1 = new Role('melee', 'D1')
+    D1.scale.set(0.4)
+    D1.position.set(-2.5 * YmToPx + 12, -7.5 * YmToPx)
+    container.addChild(D1)
+
+    const MT1 = new Role('tank', 'MT')
+    MT1.scale.set(0.4)
+    MT1.position.set(-7.5 * YmToPx - 12, -2.5 * YmToPx)
+    container.addChild(MT1)
+    const D11 = new Role('melee', 'D1')
+    D11.scale.set(0.4)
+    D11.position.set(-7.5 * YmToPx + 12, -2.5 * YmToPx)
+    container.addChild(D11)
+
+    const ST = new Role('tank', 'ST')
+    ST.scale.set(0.4)
+    ST.position.set(2.5 * YmToPx - 12, 7.5 * YmToPx)
+    container.addChild(ST)
+    const D2 = new Role('melee', 'D2')
+    D2.scale.set(0.4)
+    D2.position.set(2.5 * YmToPx + 12, 7.5 * YmToPx)
+    container.addChild(D2)
+
+    const ST1 = new Role('tank', 'ST')
+    ST1.scale.set(0.4)
+    ST1.position.set(7.5 * YmToPx - 12, 2.5 * YmToPx)
+    container.addChild(ST1)
+    const D21 = new Role('melee', 'D2')
+    D21.scale.set(0.4)
+    D21.position.set(7.5 * YmToPx + 12, 2.5 * YmToPx)
+    container.addChild(D21)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

@@ -1,0 +1,17 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Footer from '@/components/Footer.astro'
+import DarkModeButton from '@/components/DarkModeButton.astro'
+---
+
+<Layout>
+  <div class="@container relative flex min-h-dvh min-w-sm flex-col items-center">
+    <div class="bg-dots fade-b absolute inset-x-0 top-0 h-48"></div>
+    <DarkModeButton class="fixed top-8 right-8" />
+    <main class="-mt-20 flex min-h-dvh w-full flex-col items-center justify-center">
+      <h1 class="text-5xl leading-tight font-semibold tracking-tight">StratBoard</h1>
+      <p class="mt-7 text-3xl leading-relaxed font-medium text-zinc-400">最终幻想14战术制图板</p>
+    </main>
+    <Footer />
+  </div>
+</Layout>

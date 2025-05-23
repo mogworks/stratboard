@@ -1,0 +1,126 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M6S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/assets/07/m6s/floor_1@3x.png?url'
+  import circle_img from '/assets/fan/360_r20_purple@3x.png?url'
+  import rect_img from '/assets/rect/8x32_y16_light@3x.png?url'
+
+  const name = 'arrow'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const rect_8x32_texture = await Assets.load(rect_img)
+    const rectParams = [
+      { x: -17.5, y: 20, r: 0 },
+      { x: -3.5, y: 20, r: 0 },
+      { x: 10.5, y: 20, r: 0 },
+      { x: -20, y: -17.5, r: Math.PI / 2 },
+      { x: -20, y: -3.5, r: Math.PI / 2 },
+      { x: -20, y: 10.5, r: Math.PI / 2 },
+      // { x: -10.5, y: 20, r: 0 },
+      // { x: 3.5, y: 20, r: 0 },
+      // { x: 17.5, y: 20, r: 0 },
+      // { x: -20, y: -10.5, r: Math.PI / 2 },
+      // { x: -20, y: 3.5, r: Math.PI / 2 },
+      // { x: -20, y: 17.5, r: Math.PI / 2 },
+    ]
+    rectParams.forEach((r) => {
+      const rect = Sprite.from(rect_8x32_texture)
+      rect.pivot.set(0, (16 / getScale()) * YmToPx)
+      rect.anchor.set(0.5, 0.5)
+      rect.scale.set((getScale() * 7) / 8, (getScale() * 40) / 32)
+      rect.position.set(r.x * YmToPx, r.y * YmToPx)
+      rect.rotation = r.r
+      container.addChild(rect)
+    })
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number; c: string }[] = [
+      { type: 'tank', tag: 'MT', x: -7.25, y: -7.25, c: '#2563eb' },
+      { type: 'tank', tag: 'ST', x: 0.25, y: 0.25, c: '#2563eb' },
+      { type: 'melee', tag: 'D1', x: -7.25, y: 0.25, c: '#dc2626' },
+      { type: 'melee', tag: 'D2', x: 0.25, y: -7.25, c: '#dc2626' },
+      // { type: 'tank', tag: 'MT', x: -6.75, y: -6.75, c: '#2563eb' },
+      // { type: 'tank', tag: 'ST', x: -0.25, y: -0.25, c: '#2563eb' },
+      // { type: 'melee', tag: 'D1', x: -6.75, y: -0.25, c: '#dc2626' },
+      // { type: 'melee', tag: 'D2', x: -0.25, y: -6.75, c: '#dc2626' },
+    ]
+
+    const omenTexture = await Assets.load(circle_img)
+    roleParams.forEach((r) => {
+      const sprite = new Sprite(omenTexture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set((getScale() * 6) / 20)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(sprite)
+    })
+    await setWaymark(
+      container,
+      {
+        One: { X: -5.85, Z: -5.85 },
+        Two: { X: -1.15, Z: -5.85 },
+        Three: { X: -1.15, Z: -1.15 },
+        Four: { X: -5.85, Z: -1.15 },
+      },
+      0.65,
+    )
+
+    const dot = new Graphics()
+    roleParams.forEach((r) => {
+      dot.circle(r.x * YmToPx, r.y * YmToPx, 0.4 * YmToPx)
+      dot.fill({ color: r.c })
+      dot.stroke({ color: '#ffffff', width: 1 })
+    })
+    container.addChild(dot)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
