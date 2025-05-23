@@ -6,7 +6,7 @@ This project is a tactical diagram board for the [`xivstrat.com`](https://xivstr
 
 ## Resource Usage Restrictions
 
-> **⚠️ All files and folders under the public/assets path are restricted resources, subject to the following usage limitations:**
+**⚠️ All files and folders under the public/assets path are restricted resources, subject to the following usage limitations:**
 
 - Only to be used for the development and construction of the [`xivstrat.com`](https://xivstrat.com) website
 - Usage for any other purpose, whether commercial or non-commercial, is prohibited without explicit authorization
@@ -14,7 +14,7 @@ This project is a tactical diagram board for the [`xivstrat.com`](https://xivstr
 
 ## Copyright Notice
 
-> **⚠️ Some resources in this repository have the following copyright attributions:**
+**⚠️ Some resources in this repository have the following copyright attributions:**
 
 - **SQUARE-ENIX Ltd** — Copyright for certain game-related resources belongs to `SQUARE-ENIX Ltd`
 - **Third-party Artists** — Copyright for certain resources belongs to third-party artists (see Acknowledgments section), [our site](https://xivstrat.com) has obtained authorization for use
