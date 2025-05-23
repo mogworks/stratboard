@@ -24,5 +24,5 @@ This project is a tactical diagram board for the [`xivstrat.com`](https://xivstr
 Special thanks to the following contributors:
 
 - [**漓青**](https://www.mihuashi.com/profiles/81270) - Mihuashi
-- [**Guregorio**](https://www.mihuashi.com/profiles/25837) - Mihuashi
+- [**咕噜噜阿雪**](https://weibo.com/u/2251298575) - Weibo
 - [**音無星花**](https://space.bilibili.com/351806141) - Bilibili

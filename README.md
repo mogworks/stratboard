@@ -24,5 +24,5 @@
 特别感谢以下创作者的贡献：
 
 - [**漓青**](https://www.mihuashi.com/profiles/81270) - 米画师
-- [**Guregorio**](https://www.mihuashi.com/profiles/25837) - 米画师
+- [**咕噜噜阿雪**](https://weibo.com/u/2251298575) - 微博
 - [**音無星花**](https://space.bilibili.com/351806141) - Bilibili
