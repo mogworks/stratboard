@@ -1,0 +1,54 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="高清地图">
+  <StratBoard key="stratboard" width={2000} height={2000} canvasClass="w-500 h-500" resolution={1} />
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/raw/floor_p1_1.png?url'
+
+  const name = 'floor_p1_1@3x'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 1578 // 40/1576 50/1970
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
