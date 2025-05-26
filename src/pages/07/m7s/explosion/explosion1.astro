@@ -17,10 +17,8 @@ import StratBoard from '@/components/StratBoard.astro'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { waymarkData } from '../../m6s/_waymark'
-
   import end_img from '/assets/07/m6s/channeling/purple_end@5x.png?url'
-  import floor_img from '/assets/07/m6s/floor_2@3x.png?url'
+  import floor_img from '/assets/07/m7s/floor_p1_1@3x.png?url'
 
   const name = 'explosion1'
 
@@ -37,7 +35,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    await setWaymark(container, waymarkData, 0.65)
+    // await setWaymark(container, waymarkData, 0.65)
 
     const squareMask = new Graphics()
     const width = 46.4 * YmToPx
@@ -52,12 +50,60 @@ import StratBoard from '@/components/StratBoard.astro'
       { x: 13.86, y: 8 },
     ]
 
-    const endTexture = await Assets.load(end_img)
-    omenParams.forEach((r) => {
-      const end = new Sprite(endTexture)
-      end.anchor.set(0.5, 0.5)
-      end.position.set(r.x * YmToPx, r.y * YmToPx)
-      container.addChild(end)
+    function drawProxCircle(
+      pos: { x: number; y: number }, 
+      radius = 3, 
+      color = 0xff6a00
+    ) {
+      const g = new Graphics()
+      const cx = pos.x * YmToPx
+      const cy = pos.y * YmToPx
+
+      // Main circle
+      g.fill(color, 0.5)
+      g.circle(cx, cy, radius * YmToPx)
+      g.endFill()
+      g.setStrokeStyle({ width: 1, color })
+      g.circle(cx, cy, radius * YmToPx)
+      g.stroke()
+
+      // Outer seg
+      g.setStrokeStyle({ width: 3, color})
+      const segmentCount = 4
+      const arcLength = Math.PI / 3.5 
+      const gap = Math.PI / 2 - arcLength
+      for (let i = 0; i < segmentCount; i++) {
+        const start = i * (arcLength + gap)
+        const end = start + arcLength
+        const r = (radius + 0.3) * YmToPx
+        const sx = cx + r * Math.cos(start)
+        const sy = cy + r * Math.sin(start)
+        g.moveTo(sx, sy)
+        g.arc(cx, cy, r, start, end)
+      }
+      g.stroke()
+
+      // Inner seg
+      g.setStrokeStyle({ width: 1, color })
+      const innerSegmentCount = 4
+      const innerArcLength = Math.PI / 3.5
+      const innerGap = Math.PI / 2 - innerArcLength
+      for (let i = 0; i < innerSegmentCount; i++) {
+        const start = i * (innerArcLength + innerGap)
+        const end = start + innerArcLength
+        const r = (radius - 0.2) * YmToPx
+        const sx = cx + r * Math.cos(start)
+        const sy = cy + r * Math.sin(start)
+        g.moveTo(sx, sy)
+        g.arc(cx, cy, r, start, end)
+      }
+      g.stroke()
+
+      container.addChild(g)
+    }
+
+    omenParams.forEach(p => {
+      drawProxCircle(p, 3)
     })
 
     // take screenshot
