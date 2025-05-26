@@ -1,0 +1,197 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+  import { Role } from '@/pixi/role'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../../m6s/_waymark'
+
+  import end_img from '/assets/07/m6s/channeling/purple_end@5x.png?url'
+  import floor_img from '/assets/07/m6s/floor_2@3x.png?url'
+  import mark1_img from '/assets/waymark/1@3x.png?url'
+  import mark2_img from '/assets/waymark/2@3x.png?url'
+  import mark3_img from '/assets/waymark/3@3x.png?url'
+
+  const name = 'explosion_solution_step1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx // 39.8 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const omenParams = [
+      { x: 0, y: -16 },
+      { x: -13.86, y: 8 },
+      { x: 13.86, y: 8 },
+    ]
+
+    const imgList = [mark1_img, mark2_img, mark3_img]
+
+    for (let i = 0; i < omenParams.length; i++) {
+      const r = omenParams[i]
+      const texture = await Assets.load(imgList[i])
+      const sprite = new Sprite(texture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(sprite)
+    }
+
+    // prox_img to replace
+    // const endTexture = await Assets.load(end_img) 
+    // omenParams.forEach((r) => {
+    //   const end = new Sprite(endTexture)
+    //   end.anchor.set(0.5, 0.5)
+    //   end.position.set(r.x * YmToPx, r.y * YmToPx)
+    //   container.addChild(end)
+    // })
+    function drawProxCircle(
+      pos: { x: number; y: number }, 
+      radius = 3, 
+      color = 0xff6a00
+    ) {
+      const g = new Graphics()
+      const cx = pos.x * YmToPx
+      const cy = pos.y * YmToPx
+
+      // Main circle
+      g.fill(color, 0.5)
+      g.circle(cx, cy, radius * YmToPx)
+      g.endFill()
+      g.setStrokeStyle({ width: 1, color })
+      g.circle(cx, cy, radius * YmToPx)
+      g.stroke()
+
+      // Outer seg
+      g.setStrokeStyle({ width: 3, color})
+      const segmentCount = 4
+      const arcLength = Math.PI / 3.5 
+      const gap = Math.PI / 2 - arcLength
+      for (let i = 0; i < segmentCount; i++) {
+        const start = i * (arcLength + gap)
+        const end = start + arcLength
+        const r = (radius + 0.3) * YmToPx
+        const sx = cx + r * Math.cos(start)
+        const sy = cy + r * Math.sin(start)
+        g.moveTo(sx, sy)
+        g.arc(cx, cy, r, start, end)
+      }
+      g.stroke()
+
+      // Inner seg
+      g.setStrokeStyle({ width: 1, color })
+      const innerSegmentCount = 4
+      const innerArcLength = Math.PI / 3.5
+      const innerGap = Math.PI / 2 - innerArcLength
+      for (let i = 0; i < innerSegmentCount; i++) {
+        const start = i * (innerArcLength + innerGap)
+        const end = start + innerArcLength
+        const r = (radius - 0.2) * YmToPx
+        const sx = cx + r * Math.cos(start)
+        const sy = cy + r * Math.sin(start)
+        g.moveTo(sx, sy)
+        g.arc(cx, cy, r, start, end)
+      }
+      g.stroke()
+
+      container.addChild(g)
+    }
+
+    omenParams.forEach(p => {
+      drawProxCircle(p, 3)
+    })
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number; a: number }[] = [
+      { type: 'all', tag: '', x: 3, y: -16, a: 1 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      role.alpha = r.a
+      container.addChild(role)
+    })
+
+    function drawArrow(
+      from: { x: number; y: number }, 
+      to: { x: number; y: number }, 
+      color = 0xff66cc
+    ) {
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      const angle = Math.atan2(dy, dx)
+      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      const arrow = new Graphics()
+      arrow.lineStyle(4, color)
+      arrow.moveTo(from.x * YmToPx, from.y * YmToPx)
+      arrow.lineTo(to.x * YmToPx, to.y * YmToPx)
+
+      // 箭头头部三角形
+      const arrowSize = 1.5
+      const endX = to.x * YmToPx
+      const endY = to.y * YmToPx
+      arrow.beginFill(color)
+      arrow.moveTo(endX, endY)
+      arrow.lineTo(endX - arrowSize * YmToPx * Math.cos(angle - Math.PI / 8), endY - arrowSize * YmToPx * Math.sin(angle - Math.PI / 8))
+      arrow.lineTo(endX - arrowSize * YmToPx * Math.cos(angle + Math.PI / 8), endY - arrowSize * YmToPx * Math.sin(angle + Math.PI / 8))
+      arrow.lineTo(endX, endY)
+      arrow.endFill()
+
+      container.addChild(arrow)
+    }
+
+    const from = omenParams[0]
+    const to = omenParams[2]
+    drawArrow(from, to)
+
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
