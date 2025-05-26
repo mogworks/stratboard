@@ -17,11 +17,11 @@ import StratBoard from '@/components/StratBoard.astro'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { waymarkDataDB } from './_waymark'
+  import { waymarkDataDB } from '../_waymark'
 
   import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
 
-  const name = 'floor_p2'
+  const name = 'strange_seeds_safe_point'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -37,6 +37,32 @@ import StratBoard from '@/components/StratBoard.astro'
     container.addChild(floor)
 
     await setWaymark(container, waymarkDataDB, 0.65)
+    // 绘制安全区
+    const polygon = new Graphics()
+    polygon.poly([
+      190.20003, 43.99999,
+      219.60003,16.39999,
+      246.79706,40.84057,
+      237.52169, 50.69564, 
+      200.27532,50.69564
+    ])
+    polygon.position.set(92, 328)
+    polygon.stroke({width:2, color:'white'});
+    app.stage.addChild(polygon)
+
+    // 绘制安全区2
+    const polygon2 = new Graphics()
+    polygon2.poly([
+      400, 8,
+      448,8,
+      460,18,
+      460, 26, 
+      434,50,
+      398, 10,
+    ])
+    polygon2.position.set(92, 328)
+    polygon2.stroke({width:2, color:'white'});
+    app.stage.addChild(polygon2)
 
     const squareMask = new Graphics()
     const width = 46.4 * YmToPx // 46.4
