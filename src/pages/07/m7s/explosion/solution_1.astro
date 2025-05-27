@@ -17,7 +17,6 @@ import StratBoard from '@/components/StratBoard.astro'
   import { Role } from '@/pixi/role'
 
   import { getScale, YmToPx } from '@/pixi/utils'
-  import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import floor_img from '/assets/07/m7s/floor_p1_1@3x.png?url'
@@ -40,8 +39,6 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    // await setWaymark(container, waymarkData, 0.65)
-
     const squareMask = new Graphics()
     const width = 46.4 * YmToPx // 39.8 46.4
     squareMask.rect(-width / 2, -width / 2, width, width)
@@ -55,16 +52,7 @@ import StratBoard from '@/components/StratBoard.astro'
       { x: 13.86, y: 8 },
     ]
 
-    const imgList = [mark1_img, mark2_img, mark3_img]
-
-    for (let i = 0; i < omenParams.length; i++) {
-      const r = omenParams[i]
-      const texture = await Assets.load(imgList[i])
-      const sprite = new Sprite(texture)
-      sprite.anchor.set(0.5, 0.5)
-      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
-      container.addChild(sprite)
-    }
+    
 
     // prox_img to replace
     // const endTexture = await Assets.load(end_img) 
@@ -130,49 +118,81 @@ import StratBoard from '@/components/StratBoard.astro'
       drawProxCircle(p, 3)
     })
 
-    const roleParams: { type: RoleType; tag: string; x: number; y: number; a: number }[] = [
-      { type: 'all', tag: '', x: 3, y: -16, a: 1 },
-    ]
+    // 标注陨石顺序
+    const imgList = [mark1_img, mark2_img, mark3_img]
+    for (let i = 0; i < omenParams.length; i++) {
+      const r = omenParams[i]
+      const texture = await Assets.load(imgList[i])
+      const sprite = new Sprite(texture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      sprite.scale.set(getScale())
+      container.addChild(sprite)
+    }
 
+    // 职业图标
+    const roleParams: { type: RoleType; tag: string; x: number; y: number; a: number }[] = [
+      { type: 'all', tag: '', x: 14, y: 12, a: 1 },
+    ]
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
       role.scale.set(0.4)
       role.position.set(r.x * YmToPx, r.y * YmToPx)
       role.alpha = r.a
+      role.scale.set(getScale(40))
       container.addChild(role)
     })
 
     function drawArrow(
       from: { x: number; y: number }, 
       to: { x: number; y: number }, 
-      color = 0xff66cc
+      color = 0xff66cc,
+      shrinkRatio = 0.92
     ) {
       const dx = to.x - from.x
       const dy = to.y - from.y
       const angle = Math.atan2(dy, dx)
-      const distance = Math.sqrt(dx * dx + dy * dy)
+
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const shrinkDist = length * (1 - shrinkRatio)
+      const dirX = dx / length
+      const dirY = dy / length
+      const shortFrom = {
+        x: from.x + dirX * shrinkDist,
+        y: from.y + dirY * shrinkDist,
+      }
+      const shortTo = {
+        x: to.x - dirX * shrinkDist,
+        y: to.y - dirY * shrinkDist,
+      }
 
       const arrow = new Graphics()
       arrow.lineStyle(4, color)
-      arrow.moveTo(from.x * YmToPx, from.y * YmToPx)
-      arrow.lineTo(to.x * YmToPx, to.y * YmToPx)
+      arrow.moveTo(shortFrom.x * YmToPx, shortFrom.y * YmToPx)
+      arrow.lineTo(shortTo.x * YmToPx, shortTo.y * YmToPx)
 
       // 箭头头部三角形
       const arrowSize = 1.5
-      const endX = to.x * YmToPx
-      const endY = to.y * YmToPx
+      const endX = shortTo.x * YmToPx
+      const endY = shortTo.y * YmToPx
+
+      const leftX = endX - arrowSize * YmToPx * Math.cos(angle - Math.PI / 8)
+      const leftY = endY - arrowSize * YmToPx * Math.sin(angle - Math.PI / 8)
+      const rightX = endX - arrowSize * YmToPx * Math.cos(angle + Math.PI / 8)
+      const rightY = endY - arrowSize * YmToPx * Math.sin(angle + Math.PI / 8)
+
       arrow.beginFill(color)
       arrow.moveTo(endX, endY)
-      arrow.lineTo(endX - arrowSize * YmToPx * Math.cos(angle - Math.PI / 8), endY - arrowSize * YmToPx * Math.sin(angle - Math.PI / 8))
-      arrow.lineTo(endX - arrowSize * YmToPx * Math.cos(angle + Math.PI / 8), endY - arrowSize * YmToPx * Math.sin(angle + Math.PI / 8))
-      arrow.lineTo(endX, endY)
+      arrow.lineTo(leftX, leftY)
+      arrow.lineTo(rightX, rightY)
+      arrow.closePath()
       arrow.endFill()
 
       container.addChild(arrow)
     }
 
-    const from = omenParams[0]
-    const to = omenParams[2]
+    const from = omenParams[2]
+    const to = omenParams[0]
     drawArrow(from, to)
 
 
