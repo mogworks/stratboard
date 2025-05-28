@@ -39,9 +39,9 @@ export const drawRing = (x = 0, y = 0, innerRadius = 10, outerRadius = 10) => {
     hh / 2,
     outerRadius * YmToPx * scale,
   )
-
-  const cc = innerRadius / (outerRadius / 0.97)
+  
   const oo = 0.3 / outerRadius / scale
+  const cc = innerRadius / (outerRadius / (1 - oo * 3))
 
   if (cc === 0) {
     gradient.addColorStop(0, 'rgba(231, 161, 93, 0.4)') // 暗部
