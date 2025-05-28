@@ -17,7 +17,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import floor_img from '/assets/07/m7s/floor_p2_2@3x.png?url'
+  import floor_img from '/assets/07/m5s/floor_2@3x.png?url'
 
   const name = 'aoe_demo'
 
@@ -33,13 +33,24 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    const aoe = AoE.createRay(10, 40).toSprite(app)
-    aoe.rotation = Math.PI / 2
-    container.addChild(aoe)
+    const rect = AoE.createRect(50, 50).toSprite(app)
+    rect.position.set(-25 * YmToPx, 0)
+    container.addChild(rect)
+
+    const ray = AoE.createRay(8, 40).toSprite(app)
+    ray.rotation = Math.PI / 4
+    container.addChild(ray)
+
+    const ring = AoE.createRing(9, 18).toSprite(app)
+    container.addChild(ring)
+
+    const fan = AoE.createFan(50, 30).toSprite(app)
+    fan.rotation = -Math.PI / 4
+    container.addChild(fan)
 
     const squareMask = new Graphics()
     const width = 50 * YmToPx
-    const height = 25 * YmToPx
+    const height = 50 * YmToPx
     squareMask.rect(-width / 2, -height / 2, width, height)
     squareMask.fill({ color: 'white' })
     container.setMask({ mask: squareMask })
