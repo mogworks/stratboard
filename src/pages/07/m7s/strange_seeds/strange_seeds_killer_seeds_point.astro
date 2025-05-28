@@ -5,7 +5,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <Layout title='M7S'>
   <div class='flex h-screen w-screen items-center justify-center'>
-    <StratBoard class="scale-200" key='stratboard' />
+    <StratBoard key='stratboard' class='scale-200' />
   </div>
 </Layout>
 
@@ -15,14 +15,15 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import { getScale, YmToPx } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
-    import { Role, type RoleType } from '@/pixi/role'
+  import { Role, type RoleType } from '@/pixi/role'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { waymarkDataDB } from '../_waymark'
 
-  import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
+  import floor_img from '/assets/07/m7s/floor_p2_3@3x.png?url'
+  import share_img from '/assets/game/vfx/lockon/eff/com_share4a1@3x.png?url'
 
-  const name = 'strange_seeds_13_point'
+  const name = 'strange_seeds_killer_seeds_point'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -39,28 +40,40 @@ import StratBoard from '@/components/StratBoard.astro'
 
     await setWaymark(container, waymarkDataDB, 0.65)
 
-    //中线
-    const line = new Graphics()
-    line.moveTo(0,-123.5)
-    line.lineTo(0, 123.5)
-    line.stroke({
-      width:2, 
-      color:'white'});
-    container.addChild(line)
+    //分摊标记
+    const share_point: { x: number; y: number }[] = [
+      { x: -230, y: -110 },
+      { x: 0, y: -110 },
+      { x: 230, y: -110 },
+      { x: 230, y: -110 },
+      { x: 0, y: 110 },
+      { x: -230, y: 110 },
+    ]
+    const shareTexture = await Assets.load(share_img)
+    share_point.forEach((point) => {
+      const share = Sprite.from(shareTexture)
+      share.anchor.set(0.5, 0.5)
+      share.scale.set(getScale(20))
+      share.position.set(point.x, point.y)
+      container.addChild(share)
+    })
 
-
+    //职业图标
     const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
-      { type: 'healer', tag: 'H1', x: 0 - 1, y: -10.5 },
-      { type: 'healer', tag: 'H2', x: 0 + 1, y: -10.5 },
-      { type: 'tank', tag: 'MT', x: 0 - 1, y: -11.5 },
-      { type: 'tank', tag: 'ST', x: 0 + 1, y: -11.5 },
+      { type: 'tank', tag: 'MT', x: -24, y: -11 },
+      { type: 'melee', tag: 'D1', x: -22, y: -11 },
 
-      { type: 'melee', tag: 'D2', x: -24.1, y: -10.5 },
-      { type: 'melee', tag: 'D1', x: -24.1, y: -11.5 },
+      { type: 'tank', tag: 'ST', x: 0 - 1, y: -11 },
+      { type: 'melee', tag: 'D2', x: 0 + 1, y: -11 },
 
-      { type: 'ranged', tag: 'D3', x: -24, y: 11 },
-      { type: 'ranged', tag: 'D3', x: 24, y: -11.5 },
-      { type: 'magic', tag: 'D4', x: 0, y: 11 }
+      { type: 'healer', tag: 'H1', x: 22, y: -11 },
+      { type: 'ranged', tag: 'D3', x: 24, y: -11 },
+
+      { type: 'healer', tag: 'H2', x: 0 - 1, y: 11 },
+      { type: 'magic', tag: 'D4', x: 0 + 1, y: 11 },
+
+      { type: 'healer', tag: 'H1', x: -24, y: 11 },
+      { type: 'ranged', tag: 'D3', x: -22, y: 11 },
     ]
 
     roleParams.forEach((r) => {
