@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint",
-    "lint:fix": "eslint --fix"
+    "lint:fix": "eslint --fix",
+    "prepare": "husky"
   },
   "dependencies": {
     "@astrojs/vue": "5.1.0",
@@ -40,6 +41,8 @@
     "eslint": "9.27.0",
     "eslint-plugin-astro": "1.3.1",
     "eslint-plugin-format": "1.0.1",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.0",
     "prettier": "3.5.3",
     "prettier-plugin-astro": "0.14.1",
     "prettier-plugin-tailwindcss": "0.6.11",
@@ -57,5 +60,8 @@
       "unrs-resolver",
       "vue-demi"
     ]
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }
