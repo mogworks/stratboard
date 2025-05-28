@@ -1,0 +1,102 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title='M7S'>
+  <div class='flex h-screen w-screen items-center justify-center'>
+    <StratBoard key='stratboard' class='scale-200' />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, BlurFilter, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkDataDB } from './_waymark'
+
+  import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
+import { ZoomBlurFilter } from 'pixi-filters'
+
+  const name = 'floor_p2_3'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkDataDB, 0.65)
+
+    //原始线条
+    const aoeLine = new Graphics()
+    aoeLine.circle(0, 0, 100)
+    aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
+    aoeLine.circle(0, 0, 40)
+    aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
+
+    //线条模糊
+    const aoeLineBlur = new Graphics()
+    aoeLineBlur.circle(0, 0, 100)
+    aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
+    aoeLineBlur.circle(0, 0, 40)
+    aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
+    //简单模糊
+    const blurFilter = new BlurFilter()
+    blurFilter.blur = 6
+    aoeLineBlur.filters = [blurFilter]
+
+    //Zoom模糊
+    // const zoomFilter = new ZoomBlurFilter()
+    // zoomFilter.strength = 0.03
+    // zoomFilter.centerX = 20
+    // zoomFilter.centerY = 20
+    // zoomFilter.innerRadius = 0
+    // aoeLineBlur.filters = [zoomFilter]
+    
+
+    //AOE底色
+    const aoe = new Graphics()
+    aoe.circle(0, 0, 100)
+    aoe.fill({ color: '0xff9f3d', alpha: 0.2 })
+    aoe.circle(0, 0, 40)
+    aoe.cut()
+
+    container.addChild(aoeLine)
+    container.addChild(aoeLineBlur)
+    container.addChild(aoe)
+
+    // const squareMask = new Graphics()
+    // const width = 50.1 * YmToPx // 46.4
+    // squareMask.rect(-width / 2, -width / 2, width, width)
+    // squareMask.fill({ color: 'white' })
+    // container.mask = squareMask
+    // container.addChild(squareMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
