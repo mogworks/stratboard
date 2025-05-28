@@ -11,112 +11,130 @@ const COLORS = {
   outerGlow: '#f6c74f',
 }
 
-function createInnerShadow(fn: (style: FillInput) => Graphics, options: GlowFilterOptions = {}) {
-  const c = new Container()
-  const g = fn({ color: 'white', alpha: 1 })
-  c.addChild(g)
-  c.filters = [
-    new GlowFilter({
-      color: options.color ?? COLORS.innerShadow,
-      distance: options.distance ?? 32,
-      innerStrength: options.innerStrength ?? 2,
-      outerStrength: options.outerStrength ?? 0,
-      quality: options.quality ?? 0.5,
-      knockout: options.knockout ?? true,
-    }),
-  ]
-  c.alpha = options.alpha ?? 1
-  return c
-}
+export class AoE extends Container {
+  constructor(
+    fn: (style: FillInput) => Graphics,
+    aoeStyle: FillInput = { color: COLORS.aoe, alpha: 0.25 },
+    innerShadowOptions: GlowFilterOptions = {},
+    outerGlowOptions: GlowFilterOptions = {}
+  ) {
+    super()
 
-function createOuterGlow(fn: (style: FillInput) => Graphics, options: GlowFilterOptions = {}) {
-  const c = new Container()
-  const g = fn({ color: 'white', alpha: 1 })
-  c.addChild(g)
-  c.filters = [
-    new GlowFilter({
-      color: options.color ?? COLORS.outerGlow,
-      distance: options.distance ?? 8,
-      innerStrength: options.innerStrength ?? 0,
-      outerStrength: options.outerStrength ?? 8,
-      quality: options.quality ?? 0.5,
-      knockout: options.knockout ?? false,
-    }),
-  ]
-  const mask = fn({ color: 'white', alpha: 1 })
-  c.setMask({ mask, inverse: true })
-  c.addChild(mask)
-  c.alpha = options.alpha ?? 0.4
-  return c
-}
+    const innerShadow = AoE.createInnerShadow(fn, innerShadowOptions)
+    const outerGlow = AoE.createOuterGlow(fn, outerGlowOptions)
+    const aoe = fn(aoeStyle)
 
-function createAoE(
-  fn: (style: FillInput) => Graphics,
-  aoeStyle: FillInput = { color: COLORS.aoe, alpha: 0.25 },
-  innerShadowOptions: GlowFilterOptions = {},
-  outerGlowOptions: GlowFilterOptions = {}
-) {
-  const c = new Container()
-  const innerShadow = createInnerShadow(fn, innerShadowOptions)
-  const outerGlow = createOuterGlow(fn, outerGlowOptions)
-  const aoe = fn(aoeStyle)
-  c.addChild(innerShadow)
-  c.addChild(outerGlow)
-  c.addChild(aoe)
-  return c
-}
+    innerShadow.label = 'inner_shadow'
+    outerGlow.label = 'outer_glow'
+    aoe.label = 'aoe'
 
-function createRingGraphics(innerRadius: number, outerRadius: number, style: FillInput) {
-  console.log(style)
-  const ring = new Graphics()
-  ring.circle(0, 0, outerRadius * YmToPx)
-  ring.fill(style)
-  ring.circle(0, 0, innerRadius * YmToPx)
-  ring.cut()
-  return ring
-}
+    this.addChild(innerShadow)
+    this.addChild(outerGlow)
+    this.addChild(aoe)
+  }
 
-function createCircleGraphics(radius: number, style: FillInput) {
-  const circle = new Graphics()
-  circle.circle(0, 0, radius * YmToPx)
-  circle.fill(style)
-  return circle
-}
+  /**
+   * 将当前AoE容器转换为纹理，以避免父容器添加遮罩时，出现光效残留bug
+   */
+  toTexture(app: Application) {
+    return app.renderer.extract.texture(this)
+  }
 
-function createRectGraphics(width: number, height: number, style: FillInput) {
-  const rect = new Graphics()
-  rect.rect((-width * YmToPx) / 2, (-height * YmToPx) / 2, width * YmToPx, height * YmToPx)
-  rect.fill(style)
-  return rect
-}
+  /**
+   * 创建圆形AoE效果
+   */
+  static createCircle(radius: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+    return new AoE(
+      (style) => AoE.createCircleGraphics(radius, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
+      { color: colors.innerShadow ?? COLORS.innerShadow },
+      { color: colors.outerGlow ?? COLORS.outerGlow }
+    )
+  }
 
-export function createRingAoE(innerRadius: number, outerRadius: number, colors: Partial<typeof COLORS> = COLORS) {
-  return createAoE(
-    (style) => createRingGraphics(innerRadius, outerRadius, style),
-    { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-    { color: colors.innerShadow ?? COLORS.innerShadow },
-    { color: colors.outerGlow ?? COLORS.outerGlow }
-  )
-}
+  /**
+   * 创建环形AoE效果
+   */
+  static createRing(innerRadius: number, outerRadius: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+    return new AoE(
+      (style) => AoE.createRingGraphics(innerRadius, outerRadius, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
+      { color: colors.innerShadow ?? COLORS.innerShadow },
+      { color: colors.outerGlow ?? COLORS.outerGlow }
+    )
+  }
 
-export function createCircleAoE(radius: number, colors: Partial<typeof COLORS> = COLORS) {
-  return createAoE(
-    (style) => createCircleGraphics(radius, style),
-    { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-    { color: colors.innerShadow ?? COLORS.innerShadow },
-    { color: colors.outerGlow ?? COLORS.outerGlow }
-  )
-}
+  /**
+   * 创建矩形AoE效果
+   */
+  static createRect(width: number, height: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+    return new AoE(
+      (style) => AoE.createRectGraphics(width, height, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
+      { color: colors.innerShadow ?? COLORS.innerShadow },
+      { color: colors.outerGlow ?? COLORS.outerGlow }
+    )
+  }
 
-export function createRectAoE(width: number, height: number, colors: Partial<typeof COLORS> = COLORS) {
-  return createAoE(
-    (style) => createRectGraphics(width, height, style),
-    { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-    { color: colors.innerShadow ?? COLORS.innerShadow },
-    { color: colors.outerGlow ?? COLORS.outerGlow }
-  )
-}
+  private static createCircleGraphics(radius: number, style: FillInput) {
+    const circle = new Graphics()
+    circle.circle(0, 0, radius * YmToPx)
+    circle.fill(style)
+    return circle
+  }
 
-export function toTexture(app: Application, c: Container) {
-  return app.renderer.extract.texture(c)
+  private static createRingGraphics(innerRadius: number, outerRadius: number, style: FillInput) {
+    const ring = new Graphics()
+    ring.circle(0, 0, outerRadius * YmToPx)
+    ring.fill(style)
+    ring.circle(0, 0, innerRadius * YmToPx)
+    ring.cut()
+    return ring
+  }
+
+  private static createRectGraphics(width: number, height: number, style: FillInput) {
+    const rect = new Graphics()
+    rect.rect((-width * YmToPx) / 2, (-height * YmToPx) / 2, width * YmToPx, height * YmToPx)
+    rect.fill(style)
+    return rect
+  }
+
+  private static createInnerShadow(fn: (style: FillInput) => Graphics, options: GlowFilterOptions = {}) {
+    const c = new Container()
+    const g = fn({ color: 'white', alpha: 1 })
+    c.addChild(g)
+    c.filters = [
+      new GlowFilter({
+        color: options.color ?? COLORS.innerShadow,
+        distance: options.distance ?? 32,
+        innerStrength: options.innerStrength ?? 2,
+        outerStrength: options.outerStrength ?? 0,
+        quality: options.quality ?? 0.5,
+        knockout: options.knockout ?? true,
+      }),
+    ]
+    c.alpha = options.alpha ?? 1
+    return c
+  }
+
+  private static createOuterGlow(fn: (style: FillInput) => Graphics, options: GlowFilterOptions = {}) {
+    const c = new Container()
+    const g = fn({ color: 'white', alpha: 1 })
+    c.addChild(g)
+    c.filters = [
+      new GlowFilter({
+        color: options.color ?? COLORS.outerGlow,
+        distance: options.distance ?? 8,
+        innerStrength: options.innerStrength ?? 0,
+        outerStrength: options.outerStrength ?? 8,
+        quality: options.quality ?? 0.5,
+        knockout: options.knockout ?? false,
+      }),
+    ]
+    const mask = fn({ color: 'white', alpha: 1 })
+    c.setMask({ mask, inverse: true })
+    c.addChild(mask)
+    c.alpha = options.alpha ?? 0.4
+    return c
+  }
 }
