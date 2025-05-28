@@ -53,6 +53,14 @@ import StratBoard from '@/components/StratBoard.astro'
     rect.fill({ color: '#000000' })
     container.addChild(rect)
 
+    const fan = new Graphics()
+    fan.lineTo(-300, 0)
+    fan.arc(0, 0, 300, 0, Math.PI / 2)
+    fan.closePath()
+    fan.fill({ color: '#000000' })
+    fan.position.set(-300, -400)
+    container.addChild(fan)
+
     // Apply the RangeAreaFilter to the container
     container.filters = [new RangeAreaFilter({ preset: 'default' })]
 
