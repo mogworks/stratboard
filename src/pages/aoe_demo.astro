@@ -33,9 +33,9 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    const ringSprite = AoE.createRing(5, 25).toSprite(app)
-    ringSprite.position.set(0, 0)
-    container.addChild(ringSprite)
+    const aoe = AoE.createRect(5, 40).toSprite(app)
+    aoe.rotation = Math.PI / 2
+    container.addChild(aoe)
 
     const squareMask = new Graphics()
     const width = 50 * YmToPx
