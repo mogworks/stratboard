@@ -11,11 +11,11 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import type { RoleType } from '@/pixi/role'
-  import { Role } from '@/pixi/role'
 
+  import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { $stratBoards } from '@/stores/stratBoards'
 
@@ -53,18 +53,14 @@ import StratBoard from '@/components/StratBoard.astro'
     ]
 
     // prox_img to replace
-    // const endTexture = await Assets.load(end_img) 
+    // const endTexture = await Assets.load(end_img)
     // omenParams.forEach((r) => {
     //   const end = new Sprite(endTexture)
     //   end.anchor.set(0.5, 0.5)
     //   end.position.set(r.x * YmToPx, r.y * YmToPx)
     //   container.addChild(end)
     // })
-    function drawProxCircle(
-      pos: { x: number; y: number }, 
-      radius = 3, 
-      color = 0xff6a00
-    ) {
+    function drawProxCircle(pos: { x: number; y: number }, radius = 3, color = 0xff6a00) {
       const g = new Graphics()
       const cx = pos.x * YmToPx
       const cy = pos.y * YmToPx
@@ -78,9 +74,9 @@ import StratBoard from '@/components/StratBoard.astro'
       g.stroke()
 
       // Outer seg
-      g.setStrokeStyle({ width: 3, color})
+      g.setStrokeStyle({ width: 3, color })
       const segmentCount = 4
-      const arcLength = Math.PI / 3.5 
+      const arcLength = Math.PI / 3.5
       const gap = Math.PI / 2 - arcLength
       for (let i = 0; i < segmentCount; i++) {
         const start = i * (arcLength + gap)
@@ -112,8 +108,8 @@ import StratBoard from '@/components/StratBoard.astro'
       container.addChild(g)
     }
 
-    drawProxCircle(omenParams[1],3)
-    drawProxCircle(omenParams[2],3)
+    drawProxCircle(omenParams[1], 3)
+    drawProxCircle(omenParams[2], 3)
 
     // 标注陨石顺序
     const imgList = [mark1_img, mark2_img, mark3_img]
@@ -140,10 +136,10 @@ import StratBoard from '@/components/StratBoard.astro'
     })
 
     function drawArrow(
-      from: { x: number; y: number }, 
-      to: { x: number; y: number }, 
+      from: { x: number; y: number },
+      to: { x: number; y: number },
       color = 0xff66cc,
-      shrinkRatio = 0.92
+      shrinkRatio = 0.92,
     ) {
       const dx = to.x - from.x
       const dy = to.y - from.y
@@ -190,7 +186,6 @@ import StratBoard from '@/components/StratBoard.astro'
     const from = omenParams[2]
     const to = omenParams[0]
     drawArrow(from, to)
-
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

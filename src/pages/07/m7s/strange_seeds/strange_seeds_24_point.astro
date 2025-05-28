@@ -3,9 +3,9 @@ import Layout from '@/layouts/Layout.astro'
 import StratBoard from '@/components/StratBoard.astro'
 ---
 
-<Layout title='M7S'>
-  <div class='flex h-screen w-screen items-center justify-center'>
-    <StratBoard class='scale-200' key='stratboard' />
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard class="scale-200" key="stratboard" />
   </div>
 </Layout>
 
@@ -13,9 +13,11 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
-  import { Role, type RoleType } from '@/pixi/role'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { waymarkDataDB } from '../_waymark'
@@ -61,19 +63,17 @@ import StratBoard from '@/components/StratBoard.astro'
       container.addChild(role)
     })
 
-    const safePoint:{ x: number; y: number; width: number; height: number;color: string, radius: number}[] = [
-      { x: -39, y: -39, width: 10, height: 10,color: '#FF0000',radius: 50},
-      { x: 136, y: 74, width: 10, height: 10 ,color: '#FF0000',radius: 50},
-      { x: 200, y: -35, width: 10, height: 10 ,color: '#FF0000',radius: 50},
-      { x: -210, y: -35, width: 10, height: 10 ,color: '#FF0000',radius: 50},
-      { x: -210, y: 35, width: 10, height: 10 ,color: '#00FF00',radius: 50},
+    const safePoint: { x: number; y: number; width: number; height: number; color: string; radius: number }[] = [
+      { x: -39, y: -39, width: 10, height: 10, color: '#FF0000', radius: 50 },
+      { x: 136, y: 74, width: 10, height: 10, color: '#FF0000', radius: 50 },
+      { x: 200, y: -35, width: 10, height: 10, color: '#FF0000', radius: 50 },
+      { x: -210, y: -35, width: 10, height: 10, color: '#FF0000', radius: 50 },
+      { x: -210, y: 35, width: 10, height: 10, color: '#00FF00', radius: 50 },
     ]
     safePoint.forEach((r) => {
-      const point = new Graphics();
-      point
-        .roundRect(r.x, r.y, r.width, r.height,r.radius)
-        .fill(r.color)
-      container.addChild(point);
+      const point = new Graphics()
+      point.roundRect(r.x, r.y, r.width, r.height, r.radius).fill(r.color)
+      container.addChild(point)
     })
 
     const squareMask = new Graphics()

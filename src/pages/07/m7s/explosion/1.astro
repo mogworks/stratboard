@@ -11,13 +11,11 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Graphics, Sprite, TilingSprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import { getScale, YmToPx } from '@/pixi/utils'
-  import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import end_img from '/assets/07/m6s/channeling/purple_end@5x.png?url'
   import floor_img from '/assets/07/m7s/floor_p1_1@3x.png?url'
 
   const name = 'explosion1'
@@ -50,11 +48,7 @@ import StratBoard from '@/components/StratBoard.astro'
       { x: 13.86, y: 8 },
     ]
 
-    function drawProxCircle(
-      pos: { x: number; y: number }, 
-      radius = 3, 
-      color = 0xff6a00
-    ) {
+    function drawProxCircle(pos: { x: number; y: number }, radius = 3, color = 0xff6a00) {
       const g = new Graphics()
       const cx = pos.x * YmToPx
       const cy = pos.y * YmToPx
@@ -68,9 +62,9 @@ import StratBoard from '@/components/StratBoard.astro'
       g.stroke()
 
       // Outer seg
-      g.setStrokeStyle({ width: 3, color})
+      g.setStrokeStyle({ width: 3, color })
       const segmentCount = 4
-      const arcLength = Math.PI / 3.5 
+      const arcLength = Math.PI / 3.5
       const gap = Math.PI / 2 - arcLength
       for (let i = 0; i < segmentCount; i++) {
         const start = i * (arcLength + gap)
@@ -102,7 +96,7 @@ import StratBoard from '@/components/StratBoard.astro'
       container.addChild(g)
     }
 
-    omenParams.forEach(p => {
+    omenParams.forEach((p) => {
       drawProxCircle(p, 3)
     })
 
