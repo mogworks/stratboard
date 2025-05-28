@@ -33,7 +33,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    const aoe = AoE.createRect(5, 40).toSprite(app)
+    const aoe = AoE.createRay(10, 40).toSprite(app)
     aoe.rotation = Math.PI / 2
     container.addChild(aoe)
 

@@ -21,7 +21,7 @@ export interface AoECreateOptions {
   outerGlowOptions?: Partial<GlowFilterOptions>
 }
 
-export type AoEType = 'rect' | 'circle' | 'ring' | 'fan'
+export type AoEType = 'rect' | 'ray' | 'circle' | 'ring' | 'fan'
 
 export class AoETexture extends Texture {
   type: AoEType
@@ -32,7 +32,7 @@ export class AoETexture extends Texture {
   }
 
   getCenterPivot() {
-    if (this.type === 'fan') {
+    if (this.type === 'ray' || this.type === 'fan') {
       return new Point(YmToPx, this.height / 2)
     } else {
       return new Point(this.width / 2, this.height / 2)
@@ -106,6 +106,21 @@ export class AoE extends Container {
     return new AoE(
       'rect',
       style => AoE.createRectGraphics(width, height, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+    )
+  }
+
+  /**
+   * 创建射线AoE效果
+   */
+  static createRay(width: number, length: number, options: AoECreateOptions = {}): AoE {
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+
+    return new AoE(
+      'ray',
+      style => AoE.createRectGraphics(length, width, style),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
