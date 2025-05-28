@@ -24,7 +24,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import mark2_img from '/assets/waymark/2@3x.png?url'
   import mark3_img from '/assets/waymark/3@3x.png?url'
 
-  const name = 'explosion_solution_step1'
+  const name = 'explosion_solution_step2'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -112,9 +112,8 @@ import StratBoard from '@/components/StratBoard.astro'
       container.addChild(g)
     }
 
-    omenParams.forEach(p => {
-      drawProxCircle(p, 3)
-    })
+    drawProxCircle(omenParams[1],3)
+    drawProxCircle(omenParams[2],3)
 
     // 标注陨石顺序
     const imgList = [mark1_img, mark2_img, mark3_img]
@@ -130,7 +129,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
     // 职业图标
     const roleParams: { type: RoleType; tag: string; x: number; y: number; a: number }[] = [
-      { type: 'all', tag: '', x: 14, y: 12, a: 1 },
+      { type: 'all', tag: '', x: 12, y: -6, a: 1 },
     ]
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
