@@ -29,6 +29,7 @@ export default antfu(
       'style/operator-linebreak': 'off',
       'perfectionist/sort-imports': ['error', { tsconfigRootDir: '.' }],
       'unicorn/number-literal-case': 'off',
+      'antfu/consistent-list-newline': 'off',
     },
   },
 )

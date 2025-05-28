@@ -3,9 +3,9 @@ import Layout from '@/layouts/Layout.astro'
 import StratBoard from '@/components/StratBoard.astro'
 ---
 
-<Layout title='M7S'>
-  <div class='flex h-screen w-screen items-center justify-center'>
-    <StratBoard key='stratboard' class='scale-200' />
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" class="scale-200" />
   </div>
 </Layout>
 
@@ -13,14 +13,13 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, BlurFilter, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { getScale, YmToPx } from '@/pixi/utils'
+  import { getScale } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { waymarkDataDB } from './_waymark'
 
   import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
-import { ZoomBlurFilter } from 'pixi-filters'
 
   const name = 'floor_p2_3'
 
@@ -39,34 +38,33 @@ import { ZoomBlurFilter } from 'pixi-filters'
 
     await setWaymark(container, waymarkDataDB, 0.65)
 
-    //原始线条
+    // 原始线条
     const aoeLine = new Graphics()
     aoeLine.circle(0, 0, 100)
     aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
     aoeLine.circle(0, 0, 40)
     aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
 
-    //线条模糊
+    // 线条模糊
     const aoeLineBlur = new Graphics()
     aoeLineBlur.circle(0, 0, 100)
     aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
     aoeLineBlur.circle(0, 0, 40)
     aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
-    //简单模糊
+    // 简单模糊
     const blurFilter = new BlurFilter()
     blurFilter.blur = 6
     aoeLineBlur.filters = [blurFilter]
 
-    //Zoom模糊
+    // Zoom模糊
     // const zoomFilter = new ZoomBlurFilter()
     // zoomFilter.strength = 0.03
     // zoomFilter.centerX = 20
     // zoomFilter.centerY = 20
     // zoomFilter.innerRadius = 0
     // aoeLineBlur.filters = [zoomFilter]
-    
 
-    //AOE底色
+    // AOE底色
     const aoe = new Graphics()
     aoe.circle(0, 0, 100)
     aoe.fill({ color: '0xff9f3d', alpha: 0.2 })

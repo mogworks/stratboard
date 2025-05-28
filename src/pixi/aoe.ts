@@ -1,7 +1,8 @@
-import { Application, Graphics, type FillInput } from 'pixi.js'
+import type { GlowFilterOptions } from 'pixi-filters'
+import type { Application, FillInput } from 'pixi.js'
 
-import { GlowFilter, type GlowFilterOptions } from 'pixi-filters'
-import { Container } from 'pixi.js'
+import { GlowFilter } from 'pixi-filters'
+import { Container, Graphics, Rectangle, Sprite } from 'pixi.js'
 
 import { YmToPx } from './utils'
 
@@ -9,6 +10,15 @@ const COLORS = {
   aoe: '#e7a15d',
   innerShadow: '#e09142',
   outerGlow: '#f6c74f',
+} as const
+
+export type AoEColors = typeof COLORS
+
+export interface AoECreateOptions {
+  colors?: Partial<AoEColors>
+  aoeAlpha?: number
+  innerShadowOptions?: Partial<GlowFilterOptions>
+  outerGlowOptions?: Partial<GlowFilterOptions>
 }
 
 export class AoE extends Container {
@@ -16,7 +26,7 @@ export class AoE extends Container {
     fn: (style: FillInput) => Graphics,
     aoeStyle: FillInput = { color: COLORS.aoe, alpha: 0.25 },
     innerShadowOptions: GlowFilterOptions = {},
-    outerGlowOptions: GlowFilterOptions = {}
+    outerGlowOptions: GlowFilterOptions = {},
   ) {
     super()
 
@@ -37,42 +47,69 @@ export class AoE extends Container {
    * 将当前AoE容器转换为纹理，以避免父容器添加遮罩时，出现光效残留bug
    */
   toTexture(app: Application) {
-    return app.renderer.extract.texture(this)
+    const bounds = this.getLocalBounds()
+    const rect = new Rectangle(
+      bounds.x - YmToPx,
+      bounds.y - YmToPx,
+      bounds.width + YmToPx * 2,
+      bounds.height + YmToPx * 2,
+    )
+    return app.renderer.extract.texture({ target: this, frame: rect })
+  }
+
+  /**
+   * 将当前AoE容器转换为精灵，理应同上
+   */
+  toSprite(app: Application) {
+    const texture = this.toTexture(app)
+    const sprite = Sprite.from(texture)
+    sprite.anchor.set(0.5, 0.5)
+    return sprite
   }
 
   /**
    * 创建圆形AoE效果
    */
-  static createCircle(radius: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+  static createCircle(radius: number, options: AoECreateOptions = {}): AoE {
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+
     return new AoE(
-      (style) => AoE.createCircleGraphics(radius, style),
-      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-      { color: colors.innerShadow ?? COLORS.innerShadow },
-      { color: colors.outerGlow ?? COLORS.outerGlow }
+      style => AoE.createCircleGraphics(radius, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
     )
   }
 
   /**
    * 创建环形AoE效果
    */
-  static createRing(innerRadius: number, outerRadius: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+  static createRing(innerRadius: number, outerRadius: number, options: AoECreateOptions = {}): AoE {
+    if (innerRadius >= outerRadius) {
+      throw new Error('内圆半径必须小于外圆半径')
+    }
+
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+
     return new AoE(
-      (style) => AoE.createRingGraphics(innerRadius, outerRadius, style),
-      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-      { color: colors.innerShadow ?? COLORS.innerShadow },
-      { color: colors.outerGlow ?? COLORS.outerGlow }
+      style => AoE.createRingGraphics(innerRadius, outerRadius, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
     )
   }
 
   /**
    * 创建矩形AoE效果
    */
-  static createRect(width: number, height: number, colors: Partial<typeof COLORS> = COLORS): AoE {
+  static createRect(width: number, height: number, options: AoECreateOptions = {}): AoE {
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+
     return new AoE(
-      (style) => AoE.createRectGraphics(width, height, style),
-      { color: colors.aoe ?? COLORS.aoe, alpha: 0.25 },
-      { color: colors.innerShadow ?? COLORS.innerShadow },
-      { color: colors.outerGlow ?? COLORS.outerGlow }
+      style => AoE.createRectGraphics(width, height, style),
+      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
     )
   }
 
