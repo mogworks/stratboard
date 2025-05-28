@@ -1,6 +1,6 @@
 import { Sprite, Texture } from 'pixi.js'
 
-import { getScale, YmToPx } from './utils'
+import { YmToPx } from './utils'
 
 export const drawRing = (x = 0, y = 0, innerRadius = 10, outerRadius = 10) => {
   const c = document.createElement('canvas')
@@ -57,6 +57,6 @@ export const drawRing = (x = 0, y = 0, innerRadius = 10, outerRadius = 10) => {
   const rankBlueBg = new Sprite(gradTexture)
   rankBlueBg.position.set(x * YmToPx, y * YmToPx)
   rankBlueBg.anchor.set(0.5, 0.5)
-  rankBlueBg.scale.set(getScale() / scale)
+  rankBlueBg.scale.set(1 / scale)
   return rankBlueBg
 }
