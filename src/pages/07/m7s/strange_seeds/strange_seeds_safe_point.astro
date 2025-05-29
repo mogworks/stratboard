@@ -1,0 +1,78 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard class="scale-200" key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkDataDB } from '../_waymark'
+
+  import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
+
+  const name = 'strange_seeds_safe_point'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkDataDB, 0.65)
+    // 绘制安全区
+    const polygon = new Graphics()
+    polygon.poly([
+      190.20003, 43.99999, 219.60003, 16.39999, 246.79706, 40.84057, 237.52169, 50.69564, 200.27532, 50.69564,
+    ])
+    polygon.position.set(92, 328)
+    polygon.stroke({ width: 2, color: 'white' })
+    app.stage.addChild(polygon)
+
+    // 绘制安全区2
+    const polygon2 = new Graphics()
+    polygon2.poly([400, 8, 448, 8, 460, 18, 460, 26, 434, 50, 398, 10])
+    polygon2.position.set(92, 328)
+    polygon2.stroke({ width: 2, color: 'white' })
+    app.stage.addChild(polygon2)
+
+    const squareMask = new Graphics()
+    const width = 50.1 * YmToPx // 46.4
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

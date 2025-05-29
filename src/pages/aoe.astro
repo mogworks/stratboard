@@ -1,0 +1,915 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Footer from '@/components/Footer.astro'
+import DarkModeButton from '@/components/DarkModeButton.astro'
+---
+
+<Layout title="AoE图形生成器 | StratBoard" description="生成Photoshop JSX脚本来绘制各种数学图形">
+  <div class="@container relative flex min-h-dvh min-w-sm flex-col items-center">
+    <div class="bg-dots fade-b absolute inset-x-0 top-0 h-48"></div>
+    <DarkModeButton class="fixed top-8 right-8" />
+
+    <main class="flex flex-1 w-full max-w-[1400px] flex-col items-center justify-start px-4 py-20 pb-32">
+      <h1 class="text-4xl leading-tight font-semibold tracking-tight mb-8">AoE图形生成器</h1>
+      <p class="text-lg text-zinc-400 mb-12 text-center">设置数学图形参数，生成Photoshop JSX脚本</p>
+
+      <div class="w-full grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-6">
+        <!-- 参数设置面板 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold mb-6">图形参数设置</h2>
+
+          <!-- 图形类型选择 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">图形类型</label>
+            <select
+              id="shapeType"
+              class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+            >
+              <option value="rectangle">矩形</option>
+              <option value="circle">圆形</option>
+              <option value="sector">扇形</option>
+              <option value="ring">环形</option>
+              <option value="sectorRing">扇环</option>
+            </select>
+          </div>
+
+          <!-- 基础参数 -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-sm font-medium mb-2">中心X坐标 (m)</label>
+              <input
+                type="number"
+                id="centerX"
+                value="20"
+                step="0.1"
+                class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">中心Y坐标 (m)</label>
+              <input
+                type="number"
+                id="centerY"
+                value="20"
+                step="0.1"
+                class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <!-- 矩形参数 -->
+          <div id="rectangleParams" class="shape-params">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">宽度 (m)</label>
+                <input
+                  type="number"
+                  id="width"
+                  value="15"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">高度 (m)</label>
+                <input
+                  type="number"
+                  id="height"
+                  value="10"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 圆形参数 -->
+          <div id="circleParams" class="shape-params hidden">
+            <div class="mb-4">
+              <label class="block text-sm font-medium mb-2">半径 (m)</label>
+              <input
+                type="number"
+                id="radius"
+                value="8"
+                step="0.1"
+                class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <!-- 扇形参数 -->
+          <div id="sectorParams" class="shape-params hidden">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">半径 (m)</label>
+                <input
+                  type="number"
+                  id="sectorRadius"
+                  value="12"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">角度 (度)</label>
+                <input
+                  type="number"
+                  id="sectorAngle"
+                  value="90"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-2">起始角度 (度)</label>
+              <input
+                type="number"
+                id="startAngle"
+                value="0"
+                class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+              />
+            </div>
+          </div>
+
+          <!-- 环形参数 -->
+          <div id="ringParams" class="shape-params hidden">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">外半径 (m)</label>
+                <input
+                  type="number"
+                  id="outerRadius"
+                  value="12"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">内半径 (m)</label>
+                <input
+                  type="number"
+                  id="innerRadius"
+                  value="6"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 扇环参数 -->
+          <div id="sectorRingParams" class="shape-params hidden">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">外半径 (m)</label>
+                <input
+                  type="number"
+                  id="sectorOuterRadius"
+                  value="12"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">内半径 (m)</label>
+                <input
+                  type="number"
+                  id="sectorInnerRadius"
+                  value="6"
+                  step="0.1"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-medium mb-2">角度 (度)</label>
+                <input
+                  type="number"
+                  id="sectorRingAngle"
+                  value="90"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-2">起始角度 (度)</label>
+                <input
+                  type="number"
+                  id="sectorRingStartAngle"
+                  value="0"
+                  class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- 比例设置 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">1m对应像素数</label>
+            <input
+              type="number"
+              id="pixelsPerMeter"
+              value="20"
+              min="1"
+              class="w-full p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100"
+            />
+          </div>
+
+          <!-- 颜色设置 -->
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">填充颜色</label>
+            <input
+              type="color"
+              id="fillColor"
+              value="#e7a15d"
+              class="w-full h-12 border border-zinc-300 dark:border-zinc-600 rounded-md"
+            />
+          </div>
+        </div>
+
+        <!-- 图形预览面板 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold mb-6">图形预览</h2>
+          <div class="border border-zinc-300 dark:border-zinc-600 rounded-md bg-zinc-50 dark:bg-zinc-700 p-4">
+            <div class="relative w-full aspect-square">
+              <img
+                src="/assets/07/m7s/floor_p1_1@3x.png"
+                alt="背景图片"
+                class="absolute inset-0 w-full h-full object-cover rounded"
+              />
+              <canvas
+                id="previewCanvas"
+                width="800"
+                height="800"
+                class="absolute inset-0 w-full h-full border border-zinc-200 dark:border-zinc-600 rounded"
+                style="background: transparent;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- JSX脚本输出面板 -->
+        <div class="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-6">
+          <h2 class="text-xl font-semibold mb-6">Photoshop JSX脚本</h2>
+          <textarea
+            id="jsxOutput"
+            readonly
+            class="w-full h-96 p-3 border border-zinc-300 dark:border-zinc-600 rounded-md bg-zinc-50 dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-mono text-sm resize-none mb-4"
+          ></textarea>
+          <button
+            id="downloadScript"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors mb-3"
+          >
+            下载脚本
+          </button>
+          <button
+            id="downloadStyle"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-md transition-colors mb-3"
+          >
+            下载样式
+          </button>
+          <button
+            id="showTutorial"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
+          >
+            使用教程
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- 教程模态框 -->
+    <div
+      id="tutorialModal"
+      class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 hidden"
+    >
+      <div
+        class="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[85vh] overflow-hidden border border-zinc-200 dark:border-zinc-700"
+      >
+        <!-- 头部 -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6 text-white">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-3xl font-bold mb-2">使用教程</h2>
+              <p class="text-blue-100 opacity-90">AoE图形生成器完整指南</p>
+            </div>
+            <button
+              id="closeTutorial"
+              class="text-white hover:text-blue-200 transition-colors p-2 rounded-full hover:bg-white hover:bg-opacity-20"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="p-8 overflow-y-auto max-h-[calc(85vh-120px)]">
+          <div class="space-y-8">
+            <!-- 步骤1 -->
+            <div
+              class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border-l-4 border-blue-500"
+            >
+              <h3 class="text-xl font-bold text-blue-700 dark:text-blue-300 mb-4 flex items-center">
+                <span
+                  class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >1</span
+                >
+                选择图形类型
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="bg-white dark:bg-zinc-800 rounded-lg p-3 shadow-sm">
+                  <span class="font-semibold text-blue-600 dark:text-blue-400">矩形</span>：设置宽度和高度
+                </div>
+                <div class="bg-white dark:bg-zinc-800 rounded-lg p-3 shadow-sm">
+                  <span class="font-semibold text-green-600 dark:text-green-400">圆形</span>：设置半径
+                </div>
+                <div class="bg-white dark:bg-zinc-800 rounded-lg p-3 shadow-sm">
+                  <span class="font-semibold text-purple-600 dark:text-purple-400">扇形</span>：设置半径、角度和起始角度
+                </div>
+                <div class="bg-white dark:bg-zinc-800 rounded-lg p-3 shadow-sm">
+                  <span class="font-semibold text-orange-600 dark:text-orange-400">环形</span>：设置外半径和内半径
+                </div>
+                <div class="bg-white dark:bg-zinc-800 rounded-lg p-3 shadow-sm md:col-span-2">
+                  <span class="font-semibold text-red-600 dark:text-red-400">扇环</span
+                  >：设置外半径、内半径、角度和起始角度
+                </div>
+              </div>
+            </div>
+
+            <!-- 步骤2 -->
+            <div
+              class="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-l-4 border-green-500"
+            >
+              <h3 class="text-xl font-bold text-green-700 dark:text-green-300 mb-4 flex items-center">
+                <span
+                  class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >2</span
+                >
+                设置参数
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span><strong>中心坐标</strong>：图形在40m×40m地图中的位置</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span><strong>尺寸参数</strong>：以米为单位，支持小数</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span><strong>比例设置</strong>：1米对应的像素数（默认20像素/米）</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span><strong>填充颜色</strong>：选择图形的颜色</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 步骤3 -->
+            <div
+              class="bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-xl p-6 border-l-4 border-purple-500"
+            >
+              <h3 class="text-xl font-bold text-purple-700 dark:text-purple-300 mb-4 flex items-center">
+                <span
+                  class="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >3</span
+                >
+                实时预览
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>左侧修改参数后，中间预览会自动更新</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span>预览显示图形在背景地图上的实际位置和大小</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 步骤4 -->
+            <div
+              class="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl p-6 border-l-4 border-orange-500"
+            >
+              <h3 class="text-xl font-bold text-orange-700 dark:text-orange-300 mb-4 flex items-center">
+                <span
+                  class="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >4</span
+                >
+                生成和下载脚本
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <span>参数修改后JSX脚本会自动更新</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <span>点击"下载脚本"保存为.jsx文件</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 步骤5 -->
+            <div
+              class="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 rounded-xl p-6 border-l-4 border-red-500"
+            >
+              <h3 class="text-xl font-bold text-red-700 dark:text-red-300 mb-4 flex items-center">
+                <span
+                  class="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >5</span
+                >
+                在Photoshop中使用
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>打开Photoshop并新建或打开一个文档</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>选择 <strong>文件 > 脚本 > 浏览</strong>，选择下载的.jsx文件</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>或者将.jsx文件拖拽到Photoshop窗口中</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <span>脚本会自动创建新图层并绘制图形</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 步骤6 -->
+            <div
+              class="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-xl p-6 border-l-4 border-indigo-500"
+            >
+              <h3 class="text-xl font-bold text-indigo-700 dark:text-indigo-300 mb-4 flex items-center">
+                <span
+                  class="bg-indigo-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3"
+                  >6</span
+                >
+                设置图层样式
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                  <span>建好图层以后，需要设置图层样式以达到最终效果</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                  <span>如果没有预设样式，下载样式并导入</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  // 图形类型切换
+  const shapeType = document.getElementById('shapeType') as HTMLSelectElement
+  const shapeParams = document.querySelectorAll('.shape-params')
+
+  function showShapeParams() {
+    shapeParams.forEach((param) => param.classList.add('hidden'))
+    const selectedType = shapeType.value
+    const targetParam = document.getElementById(`${selectedType}Params`)
+    if (targetParam) {
+      targetParam.classList.remove('hidden')
+    }
+    updateAll()
+  }
+
+  shapeType.addEventListener('change', showShapeParams)
+
+  // 预览画布
+  const canvas = document.getElementById('previewCanvas') as HTMLCanvasElement
+  const ctx = canvas.getContext('2d')!
+
+  // 更新预览
+  function updatePreview() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // 计算实际的预览比例：800px画布对应40m背景图片
+    const backgroundScale = 800 / 40 // 20px/m for background
+
+    const centerX = Number.parseFloat((document.getElementById('centerX') as HTMLInputElement).value) * backgroundScale
+    const centerY = Number.parseFloat((document.getElementById('centerY') as HTMLInputElement).value) * backgroundScale
+    const fillColor = (document.getElementById('fillColor') as HTMLInputElement).value
+
+    ctx.fillStyle = fillColor
+    ctx.strokeStyle = fillColor
+
+    const type = shapeType.value
+
+    switch (type) {
+      case 'rectangle': {
+        const width = Number.parseFloat((document.getElementById('width') as HTMLInputElement).value) * backgroundScale
+        const height =
+          Number.parseFloat((document.getElementById('height') as HTMLInputElement).value) * backgroundScale
+        ctx.fillRect(centerX - width / 2, centerY - height / 2, width, height)
+        break
+      }
+
+      case 'circle': {
+        const radius =
+          Number.parseFloat((document.getElementById('radius') as HTMLInputElement).value) * backgroundScale
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
+        ctx.fill()
+        break
+      }
+
+      case 'sector': {
+        const sectorRadius =
+          Number.parseFloat((document.getElementById('sectorRadius') as HTMLInputElement).value) * backgroundScale
+        const sectorAngle =
+          (Number.parseFloat((document.getElementById('sectorAngle') as HTMLInputElement).value) * Math.PI) / 180
+        const startAngle =
+          (Number.parseFloat((document.getElementById('startAngle') as HTMLInputElement).value) * Math.PI) / 180
+        ctx.beginPath()
+        ctx.moveTo(centerX, centerY)
+        ctx.arc(centerX, centerY, sectorRadius, startAngle, startAngle + sectorAngle)
+        ctx.closePath()
+        ctx.fill()
+        break
+      }
+
+      case 'ring': {
+        const outerRadius =
+          Number.parseFloat((document.getElementById('outerRadius') as HTMLInputElement).value) * backgroundScale
+        const innerRadius =
+          Number.parseFloat((document.getElementById('innerRadius') as HTMLInputElement).value) * backgroundScale
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI)
+        ctx.arc(centerX, centerY, innerRadius, 0, 2 * Math.PI, true)
+        ctx.fill()
+        break
+      }
+
+      case 'sectorRing': {
+        const sectorOuterRadius =
+          Number.parseFloat((document.getElementById('sectorOuterRadius') as HTMLInputElement).value) * backgroundScale
+        const sectorInnerRadius =
+          Number.parseFloat((document.getElementById('sectorInnerRadius') as HTMLInputElement).value) * backgroundScale
+        const sectorRingAngle =
+          (Number.parseFloat((document.getElementById('sectorRingAngle') as HTMLInputElement).value) * Math.PI) / 180
+        const sectorRingStartAngle =
+          (Number.parseFloat((document.getElementById('sectorRingStartAngle') as HTMLInputElement).value) * Math.PI) /
+          180
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, sectorOuterRadius, sectorRingStartAngle, sectorRingStartAngle + sectorRingAngle)
+        ctx.arc(centerX, centerY, sectorInnerRadius, sectorRingStartAngle + sectorRingAngle, sectorRingStartAngle, true)
+        ctx.closePath()
+        ctx.fill()
+        break
+      }
+    }
+  }
+
+  // 生成JSX脚本
+  function generateJSXScript() {
+    const type = shapeType.value
+    const pixelsPerMeter = Number.parseFloat((document.getElementById('pixelsPerMeter') as HTMLInputElement).value)
+
+    const centerX = Number.parseFloat((document.getElementById('centerX') as HTMLInputElement).value) * pixelsPerMeter
+    const centerY = Number.parseFloat((document.getElementById('centerY') as HTMLInputElement).value) * pixelsPerMeter
+    const fillColor = (document.getElementById('fillColor') as HTMLInputElement).value
+
+    // 将十六进制颜色转换为RGB
+    const r = Number.parseInt(fillColor.slice(1, 3), 16)
+    const g = Number.parseInt(fillColor.slice(3, 5), 16)
+    const b = Number.parseInt(fillColor.slice(5, 7), 16)
+
+    let script = `// Photoshop JSX脚本 - AoE ${type}
+// 生成时间: ${new Date().toLocaleString()}
+
+// 辅助函数
+function selectEllipse(x1, y1, x2, y2) {
+    var desc = new ActionDescriptor();
+    var ref = new ActionReference();
+    ref.putProperty(charIDToTypeID('Chnl'), charIDToTypeID('fsel'));
+    desc.putReference(charIDToTypeID('null'), ref);
+    var ellipseDesc = new ActionDescriptor();
+    ellipseDesc.putUnitDouble(charIDToTypeID('Top '), charIDToTypeID('#Pxl'), y1);
+    ellipseDesc.putUnitDouble(charIDToTypeID('Left'), charIDToTypeID('#Pxl'), x1);
+    ellipseDesc.putUnitDouble(charIDToTypeID('Btom'), charIDToTypeID('#Pxl'), y2);
+    ellipseDesc.putUnitDouble(charIDToTypeID('Rght'), charIDToTypeID('#Pxl'), x2);
+    desc.putObject(charIDToTypeID('T   '), charIDToTypeID('Elps'), ellipseDesc);
+    executeAction(charIDToTypeID('setd'), desc, DialogModes.NO);
+}
+
+function deg2rad(deg) {
+    return deg * Math.PI / 180;
+}
+
+function createPiePath(cx, cy, r, startAngle, sweepAngle) {
+    var points = [];
+    var steps = Math.max(8, Math.floor(Math.abs(sweepAngle) / 5));
+    var angleStep = sweepAngle / steps;
+    points.push([cx, cy]);
+    for (var i = 0; i <= steps; i++) {
+        var angle = startAngle + i * angleStep;
+        var rad = deg2rad(angle);
+        points.push([cx + r * Math.cos(rad), cy + r * Math.sin(rad)]);
+    }
+    return points;
+}
+
+// 主函数
+function main() {
+    try {
+        // 检查是否有活动文档
+        if (!app.documents.length) {
+            alert('请先打开一个PSD文档！');
+            return;
+        }
+
+        var doc = app.activeDocument;
+
+        // 设置前景色
+        var shapeColor = new SolidColor();
+        shapeColor.rgb.red = ${r};
+        shapeColor.rgb.green = ${g};
+        shapeColor.rgb.blue = ${b};
+        app.foregroundColor = shapeColor;
+
+        // 创建新图层
+        var newLayer = doc.artLayers.add();
+        newLayer.name = 'AoE_${type}_' + new Date().getTime();
+        doc.activeLayer = newLayer;
+
+`
+
+    switch (type) {
+      case 'rectangle': {
+        const width = Number.parseFloat((document.getElementById('width') as HTMLInputElement).value) * pixelsPerMeter
+        const height = Number.parseFloat((document.getElementById('height') as HTMLInputElement).value) * pixelsPerMeter
+        script += `        // 绘制矩形
+        var left = ${centerX - width / 2};
+        var top = ${centerY - height / 2};
+        var right = ${centerX + width / 2};
+        var bottom = ${centerY + height / 2};
+
+        var rectSelection = [
+            [left, top],
+            [right, top],
+            [right, bottom],
+            [left, bottom]
+        ];
+
+        doc.selection.select(rectSelection);
+        doc.selection.fill(app.foregroundColor, ColorBlendMode.NORMAL, 100, false);
+        doc.selection.deselect();`
+        break
+      }
+
+      case 'circle': {
+        const radius = Number.parseFloat((document.getElementById('radius') as HTMLInputElement).value) * pixelsPerMeter
+        script += `        // 绘制圆形
+        var cx = ${centerX};
+        var cy = ${centerY};
+        var r = ${radius};
+
+        selectEllipse(cx - r, cy - r, cx + r, cy + r);
+        doc.selection.fill(app.foregroundColor, ColorBlendMode.NORMAL, 100, false);
+        doc.selection.deselect();`
+        break
+      }
+
+      case 'sector': {
+        const sectorRadius =
+          Number.parseFloat((document.getElementById('sectorRadius') as HTMLInputElement).value) * pixelsPerMeter
+        const sectorAngle = Number.parseFloat((document.getElementById('sectorAngle') as HTMLInputElement).value)
+        const startAngle = Number.parseFloat((document.getElementById('startAngle') as HTMLInputElement).value)
+        script += `        // 绘制扇形
+        var cx = ${centerX};
+        var cy = ${centerY};
+        var r = ${sectorRadius};
+        var angleStart = ${startAngle};
+        var sweepAngle = ${sectorAngle};
+
+        var piePoints = createPiePath(cx, cy, r, angleStart, sweepAngle);
+        doc.selection.deselect();
+        doc.selection.select(piePoints);
+        doc.selection.fill(app.foregroundColor, ColorBlendMode.NORMAL, 100, false);
+        doc.selection.deselect();`
+        break
+      }
+
+      case 'ring': {
+        const outerRadius =
+          Number.parseFloat((document.getElementById('outerRadius') as HTMLInputElement).value) * pixelsPerMeter
+        const innerRadius =
+          Number.parseFloat((document.getElementById('innerRadius') as HTMLInputElement).value) * pixelsPerMeter
+        script += `        // 绘制环形
+        var cx = ${centerX};
+        var cy = ${centerY};
+        var rOuter = ${outerRadius};
+        var rInner = ${innerRadius};
+
+        // 先选择外圆并填充
+        selectEllipse(cx - rOuter, cy - rOuter, cx + rOuter, cy + rOuter);
+        doc.selection.fill(app.foregroundColor, ColorBlendMode.NORMAL, 100, false);
+
+        // 再选择内圆并清除
+        selectEllipse(cx - rInner, cy - rInner, cx + rInner, cy + rInner);
+        doc.selection.clear();
+        doc.selection.deselect();`
+        break
+      }
+
+      case 'sectorRing': {
+        const sectorOuterRadius =
+          Number.parseFloat((document.getElementById('sectorOuterRadius') as HTMLInputElement).value) * pixelsPerMeter
+        const sectorInnerRadius =
+          Number.parseFloat((document.getElementById('sectorInnerRadius') as HTMLInputElement).value) * pixelsPerMeter
+        const sectorRingAngle = Number.parseFloat(
+          (document.getElementById('sectorRingAngle') as HTMLInputElement).value,
+        )
+        const sectorRingStartAngle = Number.parseFloat(
+          (document.getElementById('sectorRingStartAngle') as HTMLInputElement).value,
+        )
+        script += `        // 绘制扇环
+        var cx = ${centerX};
+        var cy = ${centerY};
+        var rOuter = ${sectorOuterRadius};
+        var rInner = ${sectorInnerRadius};
+        var angleStart = ${sectorRingStartAngle};
+        var sweepAngle = ${sectorRingAngle};
+
+        // 先绘制外扇形并填充
+        var outerPiePoints = createPiePath(cx, cy, rOuter, angleStart, sweepAngle);
+        doc.selection.deselect();
+        doc.selection.select(outerPiePoints);
+        doc.selection.fill(app.foregroundColor, ColorBlendMode.NORMAL, 100, false);
+
+        // 再选择内圆并清除
+        selectEllipse(cx - rInner, cy - rInner, cx + rInner, cy + rInner);
+        doc.selection.clear();
+        doc.selection.deselect();`
+        break
+      }
+    }
+
+    script += `
+
+        // AoE图形绘制完成
+    } catch (error) {
+        alert('执行错误: ' + error.toString());
+    }
+}
+
+// 运行主函数
+main();`
+    ;(document.getElementById('jsxOutput') as HTMLTextAreaElement).value = script
+  }
+
+  // 下载脚本
+  function downloadScript() {
+    const textarea = document.getElementById('jsxOutput') as HTMLTextAreaElement
+    const script = textarea.value
+
+    if (!script.trim()) {
+      // 如果脚本为空，先生成一次
+      generateJSXScript()
+      return downloadScript()
+    }
+
+    // 获取当前图形类型和时间戳来生成文件名
+    const type = shapeType.value
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')
+    const filename = `AoE_${type}_${timestamp}.jsx`
+
+    // 创建Blob对象
+    const blob = new Blob([script], { type: 'text/plain;charset=utf-8' })
+
+    // 创建下载链接
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // 清理URL对象
+    URL.revokeObjectURL(url)
+
+    // 更新按钮状态
+    const button = document.getElementById('downloadScript') as HTMLButtonElement
+    const originalText = button.textContent
+    button.textContent = '已下载！'
+    button.classList.remove('bg-blue-600', 'hover:bg-blue-700')
+    button.classList.add('bg-green-600')
+
+    setTimeout(() => {
+      button.textContent = originalText
+      button.classList.remove('bg-green-600')
+      button.classList.add('bg-blue-600', 'hover:bg-blue-700')
+    }, 2000)
+  }
+
+  // 更新预览和脚本
+  function updateAll() {
+    updatePreview()
+    generateJSXScript()
+  }
+
+  // 显示使用教程
+  function showTutorial() {
+    const modal = document.getElementById('tutorialModal')
+    if (modal) {
+      modal.classList.remove('hidden')
+    }
+  }
+
+  // 关闭教程
+  function closeTutorial() {
+    const modal = document.getElementById('tutorialModal')
+    if (modal) {
+      modal.classList.add('hidden')
+    }
+  }
+
+  // 下载样式文件
+  function downloadStyle() {
+    const styleUrl = '/tools/photoshop/AoE.asl'
+    const link = document.createElement('a')
+    link.href = styleUrl
+    link.download = 'AoE.asl'
+
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    // 更新按钮状态
+    const button = document.getElementById('downloadStyle') as HTMLButtonElement
+    const originalText = button.textContent
+    button.textContent = '已下载！'
+    button.classList.remove('bg-purple-600', 'hover:bg-purple-700')
+    button.classList.add('bg-green-600')
+
+    setTimeout(() => {
+      button.textContent = originalText
+      button.classList.remove('bg-green-600')
+      button.classList.add('bg-purple-600', 'hover:bg-purple-700')
+    }, 2000)
+  }
+
+  // 事件监听
+  document.getElementById('downloadScript')?.addEventListener('click', downloadScript)
+  document.getElementById('downloadStyle')?.addEventListener('click', downloadStyle)
+  document.getElementById('showTutorial')?.addEventListener('click', showTutorial)
+  document.getElementById('closeTutorial')?.addEventListener('click', closeTutorial)
+
+  // 点击模态框背景关闭
+  document.getElementById('tutorialModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      closeTutorial()
+    }
+  })
+
+  // 监听所有输入变化以更新预览和脚本
+  const inputs = document.querySelectorAll('input, select')
+  inputs.forEach((input) => {
+    input.addEventListener('input', updateAll)
+  })
+
+  // 初始化
+  showShapeParams()
+  updateAll()
+</script>
+
+<style>
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  .fade-b {
+    mask-image: linear-gradient(to bottom, black, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .bg-dots {
+      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    }
+  }
+</style>

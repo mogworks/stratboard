@@ -26,3 +26,4 @@
 - [**漓青**](https://www.mihuashi.com/profiles/81270) - 米画师
 - [**咕噜噜阿雪**](https://weibo.com/u/2251298575) - 微博
 - [**音無星花**](https://space.bilibili.com/351806141) - Bilibili
+- [**江昀y**](https://space.bilibili.com/14540235) - Bilibili
