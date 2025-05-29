@@ -1,0 +1,94 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import fan_360_img from '/assets/fan/360_r20@3x.png?url'
+  import floor_img from '/assets/07/m7s/floor_p2_1@3x.png?url'
+
+  const name = 'sporesplosion_pos'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    container.addChild(floor)
+
+    // 蒙版
+    const rectMask = new Graphics()
+    const width = floor.width
+    const height = floor.height
+    rectMask.rect(-width / 2 + 0.5, -height / 2, width, height)
+    rectMask.fill({ color: 'white' })
+    container.addChild(rectMask)
+    container.mask = rectMask
+
+    const group1 = [
+      { x: 100, y: -16.25 }, { x: 108.5, y: -7.75 }, { x: 91.5, y: 0.75 },
+      { x: 100, y: 9.25 }, { x: 91.5, y: 17.75 }, { x: 108.5, y: 26.25 },
+    ]
+    const group2 = [
+      { x: 91.5, y: -16.25 }, { x: 100, y: -7.75 }, { x: 108.5, y: 0.75 },
+      { x: 108.5, y: 9.25 }, { x: 100, y: 17.75 }, { x: 91.5, y: 26.25 },
+    ]
+    const group3 = [
+      { x: 108.5, y: -16.25 }, { x: 91.5, y: -7.75 }, { x: 100, y: 0.75 },
+      { x: 91.5, y: 9.25 }, { x: 108.5, y: 17.75 }, { x: 100, y: 26.25 },
+    ]
+    function transferPos(p: { x: number; y: number }) {
+      return {
+        x:  1.2941 * p.y - 6.4706,
+        y: -1.2529 * p.x - 0.0007 * p.y + 125.3141
+      }
+    }
+    function loadAoeGroup(group: { x: number; y: number }[]) {
+      group.forEach((p) => {
+        const fan_360 = new Sprite(fan_360_Texture)
+        const pos = transferPos(p)
+        fan_360.anchor.set(0.5, 0.5)
+        fan_360.position.set(pos.x * YmToPx, pos.y * YmToPx)
+        fan_360.scale.set(getScale() / 1.95)
+        container.addChild(fan_360)
+      })    
+    }
+
+    const fan_360_Texture = await Assets.load(fan_360_img)
+    loadAoeGroup(group1) 
+    loadAoeGroup(group2) 
+    loadAoeGroup(group3) 
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
