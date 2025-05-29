@@ -24,42 +24,54 @@ fn getAlpha(uv: vec2<f32>) -> f32 {
     return textureSample(uSampler, uSamplerSampler, uv).a;
 }
 
-fn findDisToEdge(ouv: vec2<f32>, size: f32) -> f32 {
-    var minDist = 999999.0;
+const DOUBLE_PI: f32 = 3.14159265358979323846264 * 2.;
+
+fn findDisToEdge(ouv: vec2<f32>, size1: f32, size2: f32) -> vec2<f32> {
     let texSize: vec2<u32> = textureDimensions(uSampler);
+    var minDist1 = length(vec2<f32>(texSize));
+    var minDist2 = length(vec2<f32>(texSize));
     let pixelSize = 1.0 / vec2<f32>(texSize);
     var uv = ouv;
     var minUv = uv;
+
+    const SAMPLE_COUNT = 32u;
+    // sample circle around the pixel
+    var directions: array<vec2<f32>, SAMPLE_COUNT>;
+    for (var i = 0u; i < SAMPLE_COUNT; i++) {
+        let angle = f32(i) * (DOUBLE_PI / f32(SAMPLE_COUNT+1));
+        directions[i] = vec2<f32>(cos(angle), sin(angle));
+    }
     
-    var step = size;
+    var step = max(size1, size2);
     while (step >= 1.0) {
-        const SAMPLE_COUNT = 32u;
-        var directions: array<vec2<f32>, SAMPLE_COUNT>;
-        
-        for (var i = 0u; i < SAMPLE_COUNT; i++) {
-            let angle = f32(i) * 2.0 * 3.14159265359 / f32(SAMPLE_COUNT);
-            directions[i] = vec2<f32>(cos(angle), sin(angle));
-        }
-        
         for (var i = 0u; i < SAMPLE_COUNT; i++) {
             let offset = directions[i] * step * pixelSize;
             let sampleUV = uv + offset;
-            let alpha = getAlpha(sampleUV);
+            let sampleAlpha = getAlpha(sampleUV);
+            var alpha = 0.0;
+            if (sampleUV.x >= 0.0 && sampleUV.x < 1.0 && sampleUV.y >= 0.0 && sampleUV.y < 1.0) {
+                alpha = sampleAlpha;
+            }
             
-            if (alpha == 0.0) {
+            if (alpha == 0) {
                 let dist = length((sampleUV - ouv)*vec2<f32>(texSize));
-                if (dist < minDist) {
-                    minDist = dist;
+                if (dist < minDist1 && step <= size1) {
+                    minDist1 = dist;
+                    minUv = sampleUV;
+                }
+                if (dist < minDist2 && step <= size2) {
+                    minDist2 = dist;
                     minUv = sampleUV;
                 }
             }
         }
         
-        step = step / 2;  // 每次迭代减半步长
+        step -= 1.0;
+
         uv = minUv;
     }
     
-    return minDist;
+    return vec2<f32>(minDist1, minDist2);
 }
 
 @fragment
@@ -67,19 +79,17 @@ fn main(@builtin(position) position: vec4<f32>, @location(0) uv: vec2<f32>) -> @
     let tex = textureSample(uSampler, uSamplerSampler, uv);
 
     var innerShadow1 = vec4<f32>(0.0);
-    let dist = findDisToEdge(uv, uniforms.uInnerShadow1Size);
+    var innerShadow2 = vec4<f32>(0.0);
+    let dists = findDisToEdge(uv, uniforms.uInnerShadow1Size, uniforms.uInnerShadow2Size);
+    let dist1 = dists.x;
+    let dist2 = dists.y;
 
     if (tex.a > 0.0) {
-        let alpha = max(0, 1.0 - dist / uniforms.uInnerShadow1Size);
+        var alpha = max(0, 1.0 - dist1 / uniforms.uInnerShadow1Size);
         innerShadow1 = uniforms.uInnerShadow1Color * alpha;
         innerShadow1.a = alpha;
-    }
 
-    var innerShadow2 = vec4<f32>(0.0);
-    let dist2 = findDisToEdge(uv, uniforms.uInnerShadow2Size);
-
-    if (tex.a > 0.0 && dist2 < uniforms.uInnerShadow2Size) {
-        let alpha = max(0, 1.0 - dist2 / uniforms.uInnerShadow2Size);
+        alpha = max(0, 1.0 - dist2 / uniforms.uInnerShadow2Size);
         innerShadow2 = uniforms.uInnerShadow2Color * alpha;
         innerShadow2.a = alpha;
     }

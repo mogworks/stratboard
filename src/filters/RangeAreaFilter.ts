@@ -1,6 +1,8 @@
-import { Filter, GpuProgram } from 'pixi.js'
+import { Filter, GlProgram, GpuProgram } from 'pixi.js'
 
+import defaultVertexShaderGL from '@/filters/shaders/default.vert?raw'
 import defaultVertexShader from '@/filters/shaders/default.wgsl?raw'
+import rangeAreaFragmentShaderGL from '@/filters/shaders/rangeArea.frag?raw'
 import rangeAreaFragmentShader from '@/filters/shaders/rangeArea.wgsl?raw'
 
 const PRESETS = {
@@ -44,16 +46,19 @@ export class RangeAreaFilter extends Filter {
           entryPoint: 'main',
         },
       }),
+      glProgram: new GlProgram({
+        vertex: defaultVertexShaderGL,
+        fragment: rangeAreaFragmentShaderGL,
+      }),
       resources: {
         uniforms: {
-          uInnerShadow1Color: { value: PRESETS[options.preset || 'default'].innerShadow1Color, type: 'vec4<f32>' },
-          uInnerShadow1Size: { value: PRESETS[options.preset || 'default'].innerShadow1Size, type: 'f32' },
-          uInnerShadow2Color: { value: PRESETS[options.preset || 'default'].innerShadow2Color, type: 'vec4<f32>' },
-          uInnerShadow2Size: { value: PRESETS[options.preset || 'default'].innerShadow2Size, type: 'f32' },
-          uBaseColor: { value: PRESETS[options.preset || 'default'].baseColor, type: 'vec4<f32>' },
+          uInnerShadow1Color: { value: PRESETS[options.preset ?? 'default'].innerShadow1Color, type: 'vec4<f32>' },
+          uInnerShadow1Size: { value: PRESETS[options.preset ?? 'default'].innerShadow1Size, type: 'f32' },
+          uInnerShadow2Color: { value: PRESETS[options.preset ?? 'default'].innerShadow2Color, type: 'vec4<f32>' },
+          uInnerShadow2Size: { value: PRESETS[options.preset ?? 'default'].innerShadow2Size, type: 'f32' },
+          uBaseColor: { value: PRESETS[options.preset ?? 'default'].baseColor, type: 'vec4<f32>' },
         },
       },
-      padding: 200,
     })
   }
 }
