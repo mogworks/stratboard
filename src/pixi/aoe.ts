@@ -215,6 +215,7 @@ export class AoE extends Container {
     c.addChild(g)
     c.filters = [
       new GlowFilter({
+        alpha: options.alpha ?? 1,
         color: options.color ?? COLORS.innerShadow,
         distance: options.distance ?? 32,
         innerStrength: options.innerStrength ?? 2,
@@ -223,7 +224,6 @@ export class AoE extends Container {
         knockout: options.knockout ?? true,
       }),
     ]
-    c.alpha = options.alpha ?? 1
     return c
   }
 
