@@ -13,7 +13,10 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
+  import type { RoleType } from '@/pixi/role'
+
   import { AoE } from '@/pixi/aoe'
+  import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -22,7 +25,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import floor_img from '/assets/07/m7s/floor_p2_3@3x.png?url'
 
-  const name = 'brutish_swing_ring'
+  const name = 'brutish_swing_glower_power_1'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -37,15 +40,36 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale())
     container.addChild(floor)
 
-    const aoeSprite = AoE.createRing(22.7, 80).toSprite(app)
-    aoeSprite.position.set(-12.55 * YmToPx, -27.7 * YmToPx)
+    await setWaymark(container, waymarkDataDB, 0.65)
+
+    const aoeSprite = AoE.createRay(60, 14.5).toSprite(app)
+    aoeSprite.position.set(-19.55 * YmToPx, -15 * YmToPx)
     container.addChild(aoeSprite)
 
-    await setWaymark(container, waymarkDataDB, 0.65)
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'healer', tag: 'H1', x: -24.25, y: 2 },
+      { type: 'healer', tag: 'H2', x: 0, y: 2 },
+      { type: 'tank', tag: 'MT', x: -20.25, y: -6 },
+      { type: 'tank', tag: 'ST', x: -4, y: -7 },
+      { type: 'melee', tag: 'D2', x: 2, y: -12 },
+      { type: 'melee', tag: 'D1', x: -24.25, y: -12 },
+      { type: 'ranged', tag: 'D3', x: -22.25, y: 11.5 },
+      { type: 'magic', tag: 'D4', x: 0, y: 11.5 },
+    ]
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.3)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+      const aoeSprite = AoE.createCircle(6).toSprite(app)
+      aoeSprite.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(aoeSprite)
+    })
+
     const squareMask = new Graphics()
-    const width = 50 * YmToPx // 46.4
-    const height = 25 * YmToPx // 25
-    squareMask.rect(-width / 2, -height / 2 + 1, width, height)
+    const width = 50.1 * YmToPx // 46.4
+    const height = 25.1 * YmToPx // 25
+    squareMask.rect(-width / 2, (-width + height) / 2, width, height)
     squareMask.fill({ color: 'white' })
     container.mask = squareMask
     container.addChild(squareMask)
