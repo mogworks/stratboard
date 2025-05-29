@@ -8,8 +8,8 @@ import { YmToPx } from './utils'
 
 const COLORS = {
   aoe: '#e7a15d',
-  innerShadow: '#e09142',
-  outerGlow: '#f6c74f',
+  innerShadow: '#FF751F',
+  outerGlow: '#FFFC79',
 } as const
 
 export type AoEColors = typeof COLORS
@@ -215,10 +215,10 @@ export class AoE extends Container {
     c.addChild(g)
     c.filters = [
       new GlowFilter({
-        alpha: options.alpha ?? 1,
+        alpha: options.alpha ?? 0.6,
         color: options.color ?? COLORS.innerShadow,
-        distance: options.distance ?? 32,
-        innerStrength: options.innerStrength ?? 2,
+        distance: options.distance ?? 48,
+        innerStrength: options.innerStrength ?? 3.5,
         outerStrength: options.outerStrength ?? 0,
         quality: options.quality ?? 0.5,
         knockout: options.knockout ?? true,
@@ -233,18 +233,15 @@ export class AoE extends Container {
     c.addChild(g)
     c.filters = [
       new GlowFilter({
+        alpha: options.alpha ?? 0.5,
         color: options.color ?? COLORS.outerGlow,
-        distance: options.distance ?? 8,
-        innerStrength: options.innerStrength ?? 0,
-        outerStrength: options.outerStrength ?? 8,
+        distance: options.distance ?? 10,
+        innerStrength: options.innerStrength ?? 4,
+        outerStrength: options.outerStrength ?? 0,
         quality: options.quality ?? 0.5,
-        knockout: options.knockout ?? false,
+        knockout: options.knockout ?? true,
       }),
     ]
-    const mask = fn({ color: 'white', alpha: 1 })
-    c.setMask({ mask, inverse: true })
-    c.addChild(mask)
-    c.alpha = options.alpha ?? 0.4
     return c
   }
 }
