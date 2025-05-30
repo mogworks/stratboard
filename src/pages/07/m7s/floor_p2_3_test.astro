@@ -11,8 +11,9 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, BlurFilter, Container, Graphics, Sprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
+  import { RangeAreaFilter } from '@/filters/RangeAreaFilter'
   import { getScale } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -38,42 +39,26 @@ import StratBoard from '@/components/StratBoard.astro'
 
     await setWaymark(container, waymarkDataDB, 0.65)
 
-    // 原始线条
-    const aoeLine = new Graphics()
-    aoeLine.circle(0, 0, 100)
-    aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
-    aoeLine.circle(0, 0, 40)
-    aoeLine.stroke({ width: 1.5, color: 0xf9de71, alpha: 1 })
+    const FACTOR = 2
 
-    // 线条模糊
-    const aoeLineBlur = new Graphics()
-    aoeLineBlur.circle(0, 0, 100)
-    aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
-    aoeLineBlur.circle(0, 0, 40)
-    aoeLineBlur.stroke({ width: 2, color: 0xff9f3d, alpha: 1 })
-    // 简单模糊
-    const blurFilter = new BlurFilter()
-    blurFilter.blur = 6
-    aoeLineBlur.filters = [blurFilter]
+    function createRing(innerRadius: number, outerRadius: number): Sprite {
+      const graphics = new Graphics()
+      graphics.circle(0, 0, outerRadius * FACTOR)
+      graphics.fill({ color: '0x000000' })
+      graphics.circle(0, 0, innerRadius * FACTOR)
+      graphics.cut()
 
-    // Zoom模糊
-    // const zoomFilter = new ZoomBlurFilter()
-    // zoomFilter.strength = 0.03
-    // zoomFilter.centerX = 20
-    // zoomFilter.centerY = 20
-    // zoomFilter.innerRadius = 0
-    // aoeLineBlur.filters = [zoomFilter]
+      graphics.filters = [new RangeAreaFilter({ preset: 'default' })]
 
-    // AOE底色
-    const aoe = new Graphics()
-    aoe.circle(0, 0, 100)
-    aoe.fill({ color: '0xff9f3d', alpha: 0.2 })
-    aoe.circle(0, 0, 40)
-    aoe.cut()
+      const texture = app.renderer.extract.texture(graphics)
+      const sprite = Sprite.from(texture)
+      sprite.anchor.set(0.5, 0.5)
+      sprite.scale.set(1 / FACTOR)
 
-    container.addChild(aoeLine)
-    container.addChild(aoeLineBlur)
-    container.addChild(aoe)
+      return sprite
+    }
+
+    container.addChild(createRing(40, 100))
 
     // const squareMask = new Graphics()
     // const width = 50.1 * YmToPx // 46.4
