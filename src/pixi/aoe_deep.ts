@@ -6,6 +6,9 @@ import { Container, Graphics, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
 import { YmToPx } from './utils'
 
+const Factor = 2
+const ScaledYmToPx = YmToPx * Factor
+
 const COLORS = {
   aoe: '#e7a15d',
   innerShadow: '#FF751F',
@@ -33,7 +36,7 @@ export class AoETexture extends Texture {
 
   getCenterPivot() {
     if (this.type === 'ray' || this.type === 'fan') {
-      return new Point(YmToPx, this.height / 2)
+      return new Point(ScaledYmToPx, this.height / 2)
     } else {
       return new Point(this.width / 2, this.height / 2)
     }
@@ -70,10 +73,10 @@ export class AoE extends Container {
   private getComputedRectangle() {
     const bounds = this.getLocalBounds()
     const rect = new Rectangle(
-      bounds.x - YmToPx,
-      bounds.y - YmToPx,
-      bounds.width + YmToPx * 2,
-      bounds.height + YmToPx * 2,
+      bounds.x - ScaledYmToPx,
+      bounds.y - ScaledYmToPx,
+      bounds.width + ScaledYmToPx * 2,
+      bounds.height + ScaledYmToPx * 2,
     )
     return rect
   }
@@ -94,6 +97,7 @@ export class AoE extends Container {
     const sprite = Sprite.from(texture)
     const centerPivot = texture.getCenterPivot()
     sprite.pivot.set(centerPivot.x, centerPivot.y)
+    sprite.scale.set(1 / Factor)
     return sprite
   }
 
@@ -179,30 +183,30 @@ export class AoE extends Container {
 
   private static createRectGraphics(width: number, height: number, style?: FillInput) {
     const rect = new Graphics()
-    rect.rect((-width * YmToPx) / 2, (-height * YmToPx) / 2, width * YmToPx, height * YmToPx)
+    rect.rect((-width * ScaledYmToPx) / 2, (-height * ScaledYmToPx) / 2, width * ScaledYmToPx, height * ScaledYmToPx)
     rect.fill(style)
     return rect
   }
 
   private static createCircleGraphics(radius: number, style?: FillInput) {
     const circle = new Graphics()
-    circle.circle(0, 0, radius * YmToPx)
+    circle.circle(0, 0, radius * ScaledYmToPx)
     circle.fill(style)
     return circle
   }
 
   private static createRingGraphics(innerRadius: number, outerRadius: number, style?: FillInput) {
     const ring = new Graphics()
-    ring.circle(0, 0, outerRadius * YmToPx)
+    ring.circle(0, 0, outerRadius * ScaledYmToPx)
     ring.fill(style)
-    ring.circle(0, 0, innerRadius * YmToPx)
+    ring.circle(0, 0, innerRadius * ScaledYmToPx)
     ring.cut()
     return ring
   }
 
   private static createFanGraphics(radius: number, angle: number, style?: FillInput) {
     const fan = new Graphics()
-    fan.arc(0, 0, radius * YmToPx, (-angle * Math.PI) / 360, (angle * Math.PI) / 360)
+    fan.arc(0, 0, radius * ScaledYmToPx, (-angle * Math.PI) / 360, (angle * Math.PI) / 360)
     fan.lineTo(0, 0)
     fan.closePath()
     fan.fill(style)
