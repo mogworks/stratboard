@@ -41,7 +41,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    addXfang(app, container, false, false)
+    addXfang(app, container, false, false, true)
 
     const roleParams: { type: RoleType; tag: string }[] = [
       { type: 'tank', tag: 'MT' },

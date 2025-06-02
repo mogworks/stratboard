@@ -41,7 +41,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    addXfang(app, container, true, true)
+    addXfang(app, container, true, true, true)
 
     for (let i = 0; i < 4; i++) {
       const fan = AoE.createFan(20, 25, { colors: AOE_COLORS.tailwind.green }).toSprite(app)
