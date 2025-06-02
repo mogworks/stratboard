@@ -6,10 +6,12 @@ import { Container, Graphics, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
 import { YmToPx } from './utils'
 
+const DEFAULT_RESOLUTION = 2
+
 const COLORS = {
   aoe: '#e7a15d',
-  innerShadow: '#e09142',
-  outerGlow: '#f6c74f',
+  innerShadow: '#ff751f',
+  outerGlow: '#fffc79',
 } as const
 
 export type AoEColors = typeof COLORS
@@ -19,21 +21,24 @@ export interface AoECreateOptions {
   aoeAlpha?: number
   innerShadowOptions?: Partial<GlowFilterOptions>
   outerGlowOptions?: Partial<GlowFilterOptions>
+  resolution?: number
 }
 
 export type AoEType = 'rect' | 'ray' | 'circle' | 'ring' | 'fan'
 
 export class AoETexture extends Texture {
   type: AoEType
+  resolution: number
 
-  constructor(texture: Texture, type: AoEType) {
+  constructor(texture: Texture, type: AoEType, resolution: number) {
     super(texture)
     this.type = type
+    this.resolution = resolution
   }
 
   getCenterPivot() {
     if (this.type === 'ray' || this.type === 'fan') {
-      return new Point(YmToPx, this.height / 2)
+      return new Point(YmToPx * this.resolution, this.height / 2)
     } else {
       return new Point(this.width / 2, this.height / 2)
     }
@@ -42,9 +47,11 @@ export class AoETexture extends Texture {
 
 export class AoE extends Container {
   type: AoEType
+  resolution: number
 
   constructor(
     type: AoEType,
+    resolution: number,
     fn: (style?: FillInput) => Graphics,
     aoeStyle?: FillInput,
     innerShadowOptions: GlowFilterOptions = {},
@@ -53,9 +60,10 @@ export class AoE extends Container {
     super()
 
     this.type = type
+    this.resolution = resolution
 
-    const innerShadow = AoE.createInnerShadow(fn, innerShadowOptions)
-    const outerGlow = AoE.createOuterGlow(fn, outerGlowOptions)
+    const innerShadow = AoE.createInnerShadow(fn, innerShadowOptions, resolution)
+    const outerGlow = AoE.createOuterGlow(fn, outerGlowOptions, resolution)
     const aoe = fn(aoeStyle)
 
     innerShadow.label = 'inner_shadow'
@@ -70,10 +78,10 @@ export class AoE extends Container {
   private getComputedRectangle() {
     const bounds = this.getLocalBounds()
     const rect = new Rectangle(
-      bounds.x - YmToPx,
-      bounds.y - YmToPx,
-      bounds.width + YmToPx * 2,
-      bounds.height + YmToPx * 2,
+      bounds.x - YmToPx * this.resolution,
+      bounds.y - YmToPx * this.resolution,
+      bounds.width + YmToPx * this.resolution * 2,
+      bounds.height + YmToPx * this.resolution * 2,
     )
     return rect
   }
@@ -83,7 +91,7 @@ export class AoE extends Container {
    */
   toTexture(app: Application) {
     const rectangle = this.getComputedRectangle()
-    return new AoETexture(app.renderer.extract.texture({ target: this, frame: rectangle }), this.type)
+    return new AoETexture(app.renderer.extract.texture({ target: this, frame: rectangle }), this.type, this.resolution)
   }
 
   /**
@@ -94,6 +102,7 @@ export class AoE extends Container {
     const sprite = Sprite.from(texture)
     const centerPivot = texture.getCenterPivot()
     sprite.pivot.set(centerPivot.x, centerPivot.y)
+    sprite.scale.set(1 / this.resolution)
     return sprite
   }
 
@@ -101,11 +110,12 @@ export class AoE extends Container {
    * 创建矩形AoE效果
    */
   static createRect(width: number, height: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_RESOLUTION } = options
 
     return new AoE(
       'rect',
-      style => AoE.createRectGraphics(width, height, style),
+      resolution,
+      style => AoE.createRectGraphics(width, height, style, resolution),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
@@ -116,11 +126,12 @@ export class AoE extends Container {
    * 创建射线AoE效果
    */
   static createRay(width: number, length: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_RESOLUTION } = options
 
     return new AoE(
       'ray',
-      style => AoE.createRectGraphics(length, width, style),
+      resolution,
+      style => AoE.createRectGraphics(length, width, style, resolution),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
@@ -131,11 +142,12 @@ export class AoE extends Container {
    * 创建圆形AoE效果
    */
   static createCircle(radius: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_RESOLUTION } = options
 
     return new AoE(
       'circle',
-      style => AoE.createCircleGraphics(radius, style),
+      resolution,
+      style => AoE.createCircleGraphics(radius, style, resolution),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
@@ -150,11 +162,12 @@ export class AoE extends Container {
       throw new Error('内圆半径必须小于外圆半径')
     }
 
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_RESOLUTION } = options
 
     return new AoE(
       'ring',
-      style => AoE.createRingGraphics(innerRadius, outerRadius, style),
+      resolution,
+      style => AoE.createRingGraphics(innerRadius, outerRadius, style, resolution),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
@@ -165,11 +178,12 @@ export class AoE extends Container {
    * 创建扇形AoE效果
    */
   static createFan(radius: number, angle: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {} } = options
+    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_RESOLUTION } = options
 
     const aoe = new AoE(
       'fan',
-      style => AoE.createFanGraphics(radius, angle, style),
+      resolution,
+      style => AoE.createFanGraphics(radius, angle, style, resolution),
       { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
       { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
       { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
@@ -177,48 +191,48 @@ export class AoE extends Container {
     return aoe
   }
 
-  private static createRectGraphics(width: number, height: number, style?: FillInput) {
+  private static createRectGraphics(width: number, height: number, style?: FillInput, resolution = DEFAULT_RESOLUTION) {
     const rect = new Graphics()
-    rect.rect((-width * YmToPx) / 2, (-height * YmToPx) / 2, width * YmToPx, height * YmToPx)
+    rect.rect((-width * YmToPx * resolution) / 2, (-height * YmToPx * resolution) / 2, width * YmToPx * resolution, height * YmToPx * resolution)
     rect.fill(style)
     return rect
   }
 
-  private static createCircleGraphics(radius: number, style?: FillInput) {
+  private static createCircleGraphics(radius: number, style?: FillInput, resolution = DEFAULT_RESOLUTION) {
     const circle = new Graphics()
-    circle.circle(0, 0, radius * YmToPx)
+    circle.circle(0, 0, radius * YmToPx * resolution)
     circle.fill(style)
     return circle
   }
 
-  private static createRingGraphics(innerRadius: number, outerRadius: number, style?: FillInput) {
+  private static createRingGraphics(innerRadius: number, outerRadius: number, style?: FillInput, resolution = DEFAULT_RESOLUTION) {
     const ring = new Graphics()
-    ring.circle(0, 0, outerRadius * YmToPx)
+    ring.circle(0, 0, outerRadius * YmToPx * resolution)
     ring.fill(style)
-    ring.circle(0, 0, innerRadius * YmToPx)
+    ring.circle(0, 0, innerRadius * YmToPx * resolution)
     ring.cut()
     return ring
   }
 
-  private static createFanGraphics(radius: number, angle: number, style?: FillInput) {
+  private static createFanGraphics(radius: number, angle: number, style?: FillInput, resolution = DEFAULT_RESOLUTION) {
     const fan = new Graphics()
-    fan.arc(0, 0, radius * YmToPx, (-angle * Math.PI) / 360, (angle * Math.PI) / 360)
+    fan.arc(0, 0, radius * YmToPx * resolution, (-angle * Math.PI) / 360, (angle * Math.PI) / 360)
     fan.lineTo(0, 0)
     fan.closePath()
     fan.fill(style)
     return fan
   }
 
-  private static createInnerShadow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}) {
+  private static createInnerShadow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}, resolution = DEFAULT_RESOLUTION) {
     const c = new Container()
     const g = fn({ color: 'white', alpha: 1 })
     c.addChild(g)
     c.filters = [
       new GlowFilter({
-        alpha: options.alpha ?? 1,
+        alpha: options.alpha ?? 0.6,
         color: options.color ?? COLORS.innerShadow,
-        distance: options.distance ?? 32,
-        innerStrength: options.innerStrength ?? 2,
+        distance: (options.distance ?? 36) * resolution,
+        innerStrength: options.innerStrength ?? 4,
         outerStrength: options.outerStrength ?? 0,
         quality: options.quality ?? 0.5,
         knockout: options.knockout ?? true,
@@ -227,24 +241,21 @@ export class AoE extends Container {
     return c
   }
 
-  private static createOuterGlow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}) {
+  private static createOuterGlow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}, resolution = DEFAULT_RESOLUTION) {
     const c = new Container()
     const g = fn({ color: 'white', alpha: 1 })
     c.addChild(g)
     c.filters = [
       new GlowFilter({
+        alpha: options.alpha ?? 0.6,
         color: options.color ?? COLORS.outerGlow,
-        distance: options.distance ?? 8,
-        innerStrength: options.innerStrength ?? 0,
-        outerStrength: options.outerStrength ?? 8,
+        distance: (options.distance ?? 8) * resolution,
+        innerStrength: options.innerStrength ?? 5,
+        outerStrength: options.outerStrength ?? 0,
         quality: options.quality ?? 0.5,
-        knockout: options.knockout ?? false,
+        knockout: options.knockout ?? true,
       }),
     ]
-    const mask = fn({ color: 'white', alpha: 1 })
-    c.setMask({ mask, inverse: true })
-    c.addChild(mask)
-    c.alpha = options.alpha ?? 0.4
     return c
   }
 }
