@@ -21,7 +21,7 @@ function createAoE(app: Application, rotate = false, ring = false) {
     const ring = AoE.createRing(8, 15).toSprite(app)
     aoe.addChild(ring)
   } else {
-    const circle = AoE.createCircle(8).toSprite(app)
+    const circle = AoE.createCircle(9).toSprite(app)
     aoe.addChild(circle)
   }
   return aoe

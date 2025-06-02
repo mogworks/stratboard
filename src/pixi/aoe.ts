@@ -12,13 +12,103 @@ import * as G from './graphics'
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
 import { YmToPx } from './utils'
 
-const COLORS = {
-  aoe: '#e7a15d',
-  innerShadow: '#ff751f',
-  outerGlow: '#fffc79',
-} as const
+export const AOE_COLORS = {
+  default: {
+    aoe: '#fb923c',
+    innerShadow: '#ff751f',
+    outerGlow: '#fffc79',
+  },
+  // 以下颜色来自 https://tailwindcss.com/docs/colors，aoe取400，innerShadow取700，outerGlow取300
+  tailwind: {
+    red: {
+      aoe: '#f87171',
+      innerShadow: '#b91c1c',
+      outerGlow: '#fca5a5',
+    },
+    orange: {
+      aoe: '#fb923c',
+      innerShadow: '#c2410c',
+      outerGlow: '#fdba74',
+    },
+    amber: {
+      aoe: '#fbbf24',
+      innerShadow: '#b45309',
+      outerGlow: '#fcd34d',
+    },
+    yellow: {
+      aoe: '#facc15',
+      innerShadow: '#a16207',
+      outerGlow: '#fde047',
+    },
+    lime: {
+      aoe: '#a3e635',
+      innerShadow: '#4d7c0f',
+      outerGlow: '#bef264',
+    },
+    green: {
+      aoe: '#4ade80',
+      innerShadow: '#15803d',
+      outerGlow: '#86efac',
+    },
+    emerald: {
+      aoe: '#34d399',
+      innerShadow: '#047857',
+      outerGlow: '#6ee7b7',
+    },
+    teal: {
+      aoe: '#2dd4bf',
+      innerShadow: '#0f766e',
+      outerGlow: '#5eead4',
+    },
+    cyan: {
+      aoe: '#22d3ee',
+      innerShadow: '#0e7490',
+      outerGlow: '#67e8f9',
+    },
+    sky: {
+      aoe: '#3b82f6',
+      innerShadow: '#0369a1',
+      outerGlow: '#7dd3fc',
+    },
+    blue: {
+      aoe: '#60a5fa',
+      innerShadow: '#1d4ed8',
+      outerGlow: '#93c5fd',
+    },
+    indigo: {
+      aoe: '#818cf8',
+      innerShadow: '#4338ca',
+      outerGlow: '#a5b4fc',
+    },
+    violet: {
+      aoe: '#a78bfa',
+      innerShadow: '#6d28d9',
+      outerGlow: '#c4b5fd',
+    },
+    purple: {
+      aoe: '#c084fc',
+      innerShadow: '#7e22ce',
+      outerGlow: '#d8b4fe',
+    },
+    fuchsia: {
+      aoe: '#e879f9',
+      innerShadow: '#a21caf',
+      outerGlow: '#f0abfc',
+    },
+    pink: {
+      aoe: '#f472b6',
+      innerShadow: '#be185d',
+      outerGlow: '#f9a8d4',
+    },
+    rose: {
+      aoe: '#fb7185',
+      innerShadow: '#be123c',
+      outerGlow: '#fda4af',
+    },
+  },
+}
 
-export type AoEColors = typeof COLORS
+export type AoEColors = typeof AOE_COLORS.default
 
 export interface AoECreateOptions {
   colors?: Partial<AoEColors>
@@ -132,9 +222,9 @@ export class AoE extends BaseAoE {
       'rect',
       resolution,
       style => G.createRectGraphics(width, height, style, resolution),
-      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
     )
   }
 
@@ -148,9 +238,9 @@ export class AoE extends BaseAoE {
       'ray',
       resolution,
       style => G.createRectGraphics(length, width, style, resolution),
-      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
     )
   }
 
@@ -164,9 +254,9 @@ export class AoE extends BaseAoE {
       'circle',
       resolution,
       style => G.createCircleGraphics(radius, style, resolution),
-      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
     )
   }
 
@@ -184,9 +274,9 @@ export class AoE extends BaseAoE {
       'ring',
       resolution,
       style => G.createRingGraphics(innerRadius, outerRadius, style, resolution),
-      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
     )
   }
 
@@ -200,9 +290,9 @@ export class AoE extends BaseAoE {
       'fan',
       resolution,
       style => G.createFanGraphics(radius, angle, style, resolution),
-      { color: colors.aoe ?? COLORS.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? COLORS.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? COLORS.outerGlow, ...outerGlowOptions },
+      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
+      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
     )
     return aoe
   }
@@ -214,7 +304,7 @@ export class AoE extends BaseAoE {
     c.filters = [
       new GlowFilter({
         alpha: options.alpha ?? 0.6,
-        color: options.color ?? COLORS.innerShadow,
+        color: options.color ?? AOE_COLORS.default.innerShadow,
         distance: (options.distance ?? 36) * resolution,
         innerStrength: options.innerStrength ?? 4,
         outerStrength: options.outerStrength ?? 0,
@@ -231,9 +321,9 @@ export class AoE extends BaseAoE {
     c.addChild(g)
     c.filters = [
       new GlowFilter({
-        alpha: options.alpha ?? 0.5,
-        color: options.color ?? COLORS.outerGlow,
-        distance: (options.distance ?? 8) * resolution,
+        alpha: options.alpha ?? 0.6,
+        color: options.color ?? AOE_COLORS.default.outerGlow,
+        distance: (options.distance ?? 10) * resolution,
         innerStrength: options.innerStrength ?? 5,
         outerStrength: options.outerStrength ?? 0,
         quality: options.quality ?? 0.5,
