@@ -1,0 +1,82 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="Range Area Filter Example">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+    <!-- selector for preset -->
+    <div class="absolute top-10 left-10">
+      <label for="preset-selector">Preset:</label>
+      <select id="preset-selector">
+        <option value="default">Default</option>
+        <option value="blue">Blue</option>
+        <option value="purple">Purple</option>
+      </select>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { RangeAreaFilter } from '@/filters/RangeAreaFilter'
+  import { getScale } from '@/pixi/utils'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/assets/demo/circle_floor.png?url'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+
+    const background = new Sprite(await Assets.load(floor_img))
+    background.position.set(app.screen.width / 2, app.screen.height / 2)
+    background.anchor.set(0.5, 0.5)
+    app.stage.addChild(background)
+
+    // Create a ring and rect, filter will only use alpha channel, so color doesn't matter.
+    const ring = new Graphics()
+    ring.circle(300, 300, 300)
+    ring.stroke({
+      color: '#000000',
+      width: 300,
+    })
+    container.addChild(ring)
+
+    const rect = new Graphics()
+    rect.rect(-300, 0, 600, 300)
+    rect.fill({ color: '#000000' })
+    container.addChild(rect)
+
+    const fan = new Graphics()
+    fan.lineTo(-300, 0)
+    fan.arc(0, 0, 300, 0, Math.PI / 2)
+    fan.closePath()
+    fan.fill({ color: '#000000' })
+    fan.position.set(-300, -400)
+    container.addChild(fan)
+
+    // Apply the RangeAreaFilter to the container
+    container.filters = [new RangeAreaFilter({ preset: 'default' })]
+
+    app.stage.scale.set(getScale())
+
+    app.stage.addChild(container)
+
+    app.ticker.add(() => {
+      ring.position.x = Math.sin(app.ticker.lastTime / 1000) * 100
+      ring.position.y = Math.cos(app.ticker.lastTime / 1000) * 100
+    })
+
+    const presetSelector = document.getElementById('preset-selector')
+    presetSelector?.addEventListener('change', (e: Event) => {
+      const target = e.target as HTMLSelectElement
+      container.filters = [new RangeAreaFilter({ preset: target.value as 'default' | 'blue' | 'purple' })]
+    })
+  })
+</script>

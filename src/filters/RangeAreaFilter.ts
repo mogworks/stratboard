@@ -29,8 +29,10 @@ const PRESETS = {
   },
 }
 
+export type RangeAreaFilterPreset = keyof typeof PRESETS
+
 export interface RangeAreaFilterOptions {
-  preset?: keyof typeof PRESETS
+  preset?: RangeAreaFilterPreset
 }
 
 export class RangeAreaFilter extends Filter {

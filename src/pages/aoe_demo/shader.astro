@@ -3,18 +3,9 @@ import Layout from '@/layouts/Layout.astro'
 import StratBoard from '@/components/StratBoard.astro'
 ---
 
-<Layout title="Range Area Filter Example">
+<Layout title="M7S">
   <div class="flex h-screen w-screen items-center justify-center">
     <StratBoard key="stratboard" />
-    <!-- selector for preset -->
-    <div class="absolute top-10 left-10">
-      <label for="preset-selector">Preset:</label>
-      <select id="preset-selector">
-        <option value="default">Default</option>
-        <option value="blue">Blue</option>
-        <option value="purple">Purple</option>
-      </select>
-    </div>
   </div>
 </Layout>
 
@@ -22,11 +13,13 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { RangeAreaFilter } from '@/filters/RangeAreaFilter'
-  import { getScale } from '@/pixi/utils'
+  import { ShaderAoE } from '@/pixi/aoe'
+  import { getScale, YmToPx } from '@/pixi/utils'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import floor_img from '/assets/demo/circle_floor.png?url'
+  import floor_img from '/assets/07/m5s/floor_2@3x.png?url'
+
+  const name = 'shader'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -34,49 +27,50 @@ import StratBoard from '@/components/StratBoard.astro'
     const container = new Container()
     container.position.set(app.screen.width / 2, app.screen.height / 2)
 
-    const background = new Sprite(await Assets.load(floor_img))
-    background.position.set(app.screen.width / 2, app.screen.height / 2)
-    background.anchor.set(0.5, 0.5)
-    app.stage.addChild(background)
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
 
-    // Create a ring and rect, filter will only use alpha channel, so color doesn't matter.
-    const ring = new Graphics()
-    ring.circle(300, 300, 300)
-    ring.stroke({
-      color: '#000000',
-      width: 300,
-    })
-    container.addChild(ring)
-
-    const rect = new Graphics()
-    rect.rect(-300, 0, 600, 300)
-    rect.fill({ color: '#000000' })
+    const rect = ShaderAoE.createRect(50, 50).toSprite(app)
+    rect.position.set(-25 * YmToPx, 0)
     container.addChild(rect)
 
-    const fan = new Graphics()
-    fan.lineTo(-300, 0)
-    fan.arc(0, 0, 300, 0, Math.PI / 2)
-    fan.closePath()
-    fan.fill({ color: '#000000' })
-    fan.position.set(-300, -400)
+    const ray = ShaderAoE.createRay(8, 40).toSprite(app)
+    ray.rotation = Math.PI / 4
+    container.addChild(ray)
+
+    const ring = ShaderAoE.createRing(9, 18).toSprite(app)
+    container.addChild(ring)
+
+    const fan = ShaderAoE.createFan(50, 30).toSprite(app)
+    fan.rotation = -Math.PI / 4
     container.addChild(fan)
 
-    // Apply the RangeAreaFilter to the container
-    container.filters = [new RangeAreaFilter({ preset: 'default' })]
-
-    app.stage.scale.set(getScale())
+    const squareMask = new Graphics()
+    const width = 50 * YmToPx
+    const height = 50 * YmToPx
+    squareMask.rect(-width / 2, -height / 2, width, height)
+    squareMask.fill({ color: 'white' })
+    container.setMask({ mask: squareMask })
+    container.addChild(squareMask)
 
     app.stage.addChild(container)
 
-    app.ticker.add(() => {
-      ring.position.x = Math.sin(app.ticker.lastTime / 1000) * 100
-      ring.position.y = Math.cos(app.ticker.lastTime / 1000) * 100
-    })
-
-    const presetSelector = document.getElementById('preset-selector')
-    presetSelector?.addEventListener('change', (e: Event) => {
-      const target = e.target as HTMLSelectElement
-      container.filters = [new RangeAreaFilter({ preset: target.value as 'default' | 'blue' | 'purple' })]
-    })
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
   })
 </script>
