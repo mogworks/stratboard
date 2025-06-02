@@ -13,6 +13,9 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -40,6 +43,28 @@ import StratBoard from '@/components/StratBoard.astro'
     addXfang(app, container, true, true)
 
     await setWaymark(container, waymarkData, 0.65)
+
+    const roleParams: { type: RoleType; tag: string }[] = [
+      { type: 'ranged', tag: 'D3' },
+      { type: 'tank', tag: 'MT' },
+      { type: 'magic', tag: 'D4' },
+      { type: 'tank', tag: 'ST' },
+      { type: 'dps', tag: 'D2' },
+      { type: 'healer', tag: 'H2' },
+      { type: 'melee', tag: 'D1' },
+      { type: 'healer', tag: 'H1' },
+    ]
+
+    const radius = 6.5 * YmToPx
+    roleParams.forEach((r, i) => {
+      const j = Math.floor(i / 2)
+      const k = i % 4 < 2 ? 21 : 18
+      const angle = Math.PI * (-1 / 2) + (Math.PI * j) / 2 + (i % 2 === 0 ? -Math.PI / k : Math.PI / k)
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4 * 0.78)
+      role.position.set(radius * Math.cos(angle), radius * Math.sin(angle))
+      container.addChild(role)
+    })
 
     const circleMask = new Graphics()
     const circleRadius = 15.2 * YmToPx

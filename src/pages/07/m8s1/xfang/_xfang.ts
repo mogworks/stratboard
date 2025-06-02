@@ -5,24 +5,39 @@ import { Container, Graphics } from 'pixi.js'
 import { AoE } from '@/pixi/aoe'
 import { YmToPx } from '@/pixi/utils'
 
-function createAoE(app: Application, rotate = false, ring = false) {
-  const aoe = new Container()
+function createAoESingle(app: Application, rotate = false, ring = false) {
   const rect1 = AoE.createRect(40, 6).toSprite(app)
   if (rotate) {
     rect1.rotation = Math.PI / 4
   }
-  aoe.addChild(rect1)
   const rect2 = AoE.createRect(6, 40).toSprite(app)
   if (rotate) {
     rect2.rotation = Math.PI / 4
   }
-  aoe.addChild(rect2)
   if (ring) {
     const ring = AoE.createRing(8, 15).toSprite(app)
-    aoe.addChild(ring)
+    return [rect1, rect2, ring]
   } else {
     const circle = AoE.createCircle(9).toSprite(app)
-    aoe.addChild(circle)
+    return [rect1, rect2, circle]
+  }
+}
+
+function createAoE(app: Application, rotate: boolean | 'all' = false, ring = false) {
+  const aoe = new Container()
+  if (rotate === 'all') {
+    const [rect11, rect12, ringOrCircle1] = createAoESingle(app, false, ring)
+    const [rect21, rect22, _ringOrCircle2] = createAoESingle(app, true, ring)
+    aoe.addChild(rect11)
+    aoe.addChild(rect12)
+    aoe.addChild(rect21)
+    aoe.addChild(rect22)
+    aoe.addChild(ringOrCircle1)
+  } else {
+    const [rect1, rect2, ringOrCircle] = createAoESingle(app, rotate, ring)
+    aoe.addChild(rect1)
+    aoe.addChild(rect2)
+    aoe.addChild(ringOrCircle)
   }
   return aoe
 }
@@ -43,7 +58,7 @@ function createMask(inverse = false) {
   return aoeMask
 }
 
-export function addXfang(app: Application, container: Container, rotate = false, ring = false) {
+export function addXfang(app: Application, container: Container, rotate: boolean | 'all' = false, ring = false) {
   // 被电网覆盖的外圈，几乎透明
   const aoe1 = createAoE(app, rotate, ring)
   aoe1.alpha = 0.2

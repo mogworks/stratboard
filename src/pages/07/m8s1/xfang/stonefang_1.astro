@@ -15,7 +15,6 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import type { RoleType } from '@/pixi/role'
 
-  import { AoE, AOE_COLORS } from '@/pixi/aoe'
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/utils'
   import { setWaymark } from '@/pixi/waymark'
@@ -47,19 +46,12 @@ import StratBoard from '@/components/StratBoard.astro'
       { type: 'tank', tag: 'MT' },
       { type: 'magic', tag: 'D4' },
       { type: 'tank', tag: 'ST' },
-      { type: 'melee', tag: 'D2' },
+      { type: 'dps', tag: 'D2' },
       { type: 'healer', tag: 'H2' },
       { type: 'melee', tag: 'D1' },
       { type: 'healer', tag: 'H1' },
       { type: 'ranged', tag: 'D3' },
     ]
-
-    roleParams.forEach((_r, i) => {
-      const fan = AoE.createFan(20, 25, { colors: AOE_COLORS.tailwind.amber }).toSprite(app)
-      fan.rotation = Math.PI * (-5 / 8) + (Math.PI * i) / 4
-      fan.alpha = 0.6
-      container.addChild(fan)
-    })
 
     await setWaymark(container, waymarkData, 0.65)
 
