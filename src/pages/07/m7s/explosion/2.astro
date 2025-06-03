@@ -11,7 +11,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Graphics, Sprite, BlurFilter } from 'pixi.js'
+  import { Assets, BlurFilter, Container, Graphics, Sprite } from 'pixi.js'
 
   import { getScale, YmToPx } from '@/pixi/utils'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -52,12 +52,12 @@ import StratBoard from '@/components/StratBoard.astro'
       const cx = pos.x * YmToPx
       const cy = pos.y * YmToPx
 
-      const filteredGraph = new Graphics
+      const filteredGraph = new Graphics()
       filteredGraph.circle(cx, cy, (radius - 0.9) * YmToPx)
       filteredGraph.fill(0xffaa33, 0.9)
       filteredGraph.filters = [new BlurFilter(3)]
       filteredGraph.endFill()
-      
+
       const g = new Graphics()
 
       // Main circle
