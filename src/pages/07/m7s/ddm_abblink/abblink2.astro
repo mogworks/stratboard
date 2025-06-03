@@ -1,0 +1,125 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import chn_img from '/assets/game/vfx/channeling/eff/chn_tergetfix1f.png?url'
+  import flare_img from '/assets/game/vfx/lockon/eff/flare_aoe.png?url'
+  import floor_img from '/assets/07/m7s/floor_p2_5@3x.png?url'
+
+  const name = 'AbBlink_flare2'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    container.addChild(floor)
+
+    // 蒙版
+    const rectMask = new Graphics()
+    const width = floor.width * 1.5
+    const height = floor.height * 1.5
+    rectMask.rect(-width / 2 + 0.5, -height / 2, width, height)
+    rectMask.fill({ color: 'white' })
+    container.addChild(rectMask)
+    container.mask = rectMask
+
+    // 墙体
+    const rectParam = {w: 200, h: 50, color: 0x2e8b57}
+    const wallRect = [
+      { x: - floor.width/2.5, y: - floor.height / 1.4, w: rectParam.w, h:rectParam.h},  // mt
+      { x: - floor.width/1.65, y: - floor.height / 3, w: rectParam.h, h:rectParam.w},   // d3
+      { x: floor.width/8, y: floor.height / 1.8, w: rectParam.w, h:rectParam.h},   // d4
+    ]
+    const wallPos : {x: number, y: number}[] = []
+    wallRect.forEach((r) => {
+      const g = new Graphics()
+      g.rect(r.x, r.y, r.w, r.h)
+      g.fill(rectParam.color)
+      g.endFill()
+      container.addChild(g)
+      wallPos.push({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
+    })
+
+    // 角色图标
+    const roleParam: { type: RoleType; tag: string; x: number; y: number; a: number }[] = [
+      { type: 'tank', tag: 'MT', x: 0, y: 14, a: 1 },
+      { type: 'dps', tag: 'D3', x: -30, y: 0, a: 1 },
+      { type: 'dps', tag: 'D4', x: -20, y: -14, a: 1 },
+      { type: 'all', tag: 'all', x: -4, y: 14, a: 1},
+      { type: 'tank', tag: 'ST', x: 30, y: -14, a: 1 },
+    ]
+    const flareTexture = await Assets.load(flare_img)
+    roleParam.forEach((r, i) => {
+      if (i === 4) {
+        // 核爆
+        const flare = new Sprite(flareTexture)
+        flare.anchor.set(0.5, 0.5)
+        flare.scale.set(getScale()/6)
+        flare.position.set(roleParam[4].x * YmToPx, roleParam[4].y * YmToPx)
+        container.addChild(flare)
+      }
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.5)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      role.alpha = r.a
+      container.addChild(role)
+    })
+
+    // 连线
+    const chnTexture = await Assets.load(chn_img)
+    for (let i = 0; i < 3; i++) {
+      const p1 = {x: roleParam[i].x * YmToPx, y: roleParam[i].y * YmToPx}
+      const p2 = wallPos[3 - 1 - i]
+
+      const dx = p2.x - p1.x
+      const dy = p2.y - p1.y
+      const len = Math.sqrt(dx * dx + dy * dy)
+      const angle = Math.atan2(dy, dx)
+
+      const chn = new Sprite(chnTexture)
+      chn.anchor.set(0, 0.5)
+      chn.position.set(p1.x, p1.y)
+      chn.rotation = angle
+      chn.width = len
+      container.addChild(chn)
+    }
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
