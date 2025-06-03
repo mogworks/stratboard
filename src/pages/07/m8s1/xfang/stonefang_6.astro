@@ -1,0 +1,97 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M8S1">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" canvasClass="h-full w-full" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/pixi/role'
+
+  import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from '../_waymark'
+  import { addXfang } from './_xfang'
+
+  import floor_img from '/assets/07/m8s1/floor_2@3x.png?url'
+
+  const name = 'stonefang_6'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale(50, 0.78))
+    container.addChild(floor)
+
+    addXfang(app, container, 'all', false, true)
+
+    const roleParams: { type: RoleType; tag: string }[] = [
+      { type: 'tank', tag: 'MT' },
+      { type: 'magic', tag: 'D4' },
+      { type: 'tank', tag: 'ST' },
+      { type: 'dps', tag: 'D2' },
+      { type: 'healer', tag: 'H2' },
+      { type: 'melee', tag: 'D1' },
+      { type: 'healer', tag: 'H1' },
+      { type: 'ranged', tag: 'D3' },
+    ]
+
+    roleParams.forEach((_r, i) => {
+      const fan = AoE.createFan(20, 25, { colors: AOE_COLORS.tailwind.orange }).toSprite(app)
+      fan.rotation = Math.PI * (-5 / 8) + (Math.PI * i) / 4
+      fan.alpha = 0.75
+      container.addChild(fan)
+    })
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const radius = 10 * YmToPx
+    roleParams.forEach((r, i) => {
+      const angle = Math.PI * (-5 / 8) + (Math.PI * i) / 4
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4 * 0.78)
+      role.position.set(radius * Math.cos(angle), radius * Math.sin(angle))
+      container.addChild(role)
+    })
+
+    const circleMask = new Graphics()
+    const circleRadius = 15.1 * YmToPx
+    circleMask.circle(0, 0, circleRadius)
+    circleMask.fill({ color: 'white' })
+    container.mask = circleMask
+    container.addChild(circleMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
