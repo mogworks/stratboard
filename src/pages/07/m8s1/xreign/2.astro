@@ -22,6 +22,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { createCircleAoE } from './_circle'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
+  import arrow_img from '/assets/07/m8s1/xreign/arrow@2x.png?url'
 
   const name = '2'
 
@@ -44,9 +45,24 @@ import StratBoard from '@/components/StratBoard.astro'
     const targetRing = await createTargetRing()
     container.addChild(targetRing)
 
-    // TODO 添加表示冲锋幻象的箭头（倒三角）
-
     await setWaymark(container, waymarkData, 0.65)
+
+    // 添加表示冲锋幻象的箭头（倒三角）
+    const arrowTexture = await Assets.load(arrow_img)
+    const arrowParams = [
+      { r: 1.6, a: -30 },
+      { r: 1.6, a: 90 },
+      { r: 1.6, a: -150 },
+    ]
+    arrowParams.forEach((p) => {
+      const radius = p.r * YmToPx
+      const radian = (p.a * Math.PI) / 180
+      const arrow = Sprite.from(arrowTexture)
+      arrow.anchor.set(0, 0.5)
+      arrow.position.set(radius * Math.cos(radian), radius * Math.sin(radian))
+      arrow.rotation = radian
+      container.addChild(arrow)
+    })
 
     const circleMask = new Graphics()
     const circleRadius = 15.1 * YmToPx
