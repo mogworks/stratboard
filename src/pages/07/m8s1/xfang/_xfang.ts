@@ -4,7 +4,7 @@ import { Container } from 'pixi.js'
 
 import { AoE, AOE_COLORS } from '@/pixi/aoe'
 
-import { createMaskAoE } from '../_mask'
+import { splitContainer } from '../_mask'
 
 function createAoESingle(app: Application, rotate = false, ring = false, activate = false) {
   const rect1 = AoE.createRect(40, 6, activate ? { colors: AOE_COLORS.tailwind.sky } : undefined).toSprite(app)
@@ -44,7 +44,7 @@ function createAoE(app: Application, rotate: boolean | 'all' = false, ring = fal
 }
 
 export function createXfang(app: Application, rotate: boolean | 'all' = false, ring = false, activate = false) {
-  return createMaskAoE(() => {
+  return splitContainer(() => {
     return createAoE(app, rotate, ring, activate)
   })
 }
