@@ -22,7 +22,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { waymarkData } from '../_waymark'
-  import { addXfang } from './_xfang'
+  import { createXfang } from './_xfang'
 
   import floor_img from '/assets/07/m8s1/floor_2@3x.png?url'
 
@@ -41,7 +41,8 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    addXfang(app, container, true, false, true)
+    const aoe = createXfang(app, true, false, true)
+    container.addChild(aoe)
 
     const roleParams: { type: RoleType; tag: string }[] = [
       { type: 'tank', tag: 'MT' },

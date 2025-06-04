@@ -105,6 +105,31 @@ export const AOE_COLORS = {
       innerShadow: '#be123c',
       outerGlow: '#fda4af',
     },
+    slate: {
+      aoe: '#94a3b8',
+      innerShadow: '#334155',
+      outerGlow: '#cbd5e1',
+    },
+    gray: {
+      aoe: '#9ca3af',
+      innerShadow: '#374151',
+      outerGlow: '#d1d5db',
+    },
+    zinc: {
+      aoe: '#a1a1aa',
+      innerShadow: '#3f3f46',
+      outerGlow: '#d4d4d8',
+    },
+    neutral: {
+      aoe: '#a3a3a3',
+      innerShadow: '#404040',
+      outerGlow: '#d4d4d4',
+    },
+    stone: {
+      aoe: '#a8a29e',
+      innerShadow: '#44403c',
+      outerGlow: '#d6d3d1',
+    },
   },
 }
 

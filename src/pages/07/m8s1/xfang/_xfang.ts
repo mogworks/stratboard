@@ -1,9 +1,10 @@
 import type { Application } from 'pixi.js'
 
-import { Container, Graphics } from 'pixi.js'
+import { Container } from 'pixi.js'
 
 import { AoE, AOE_COLORS } from '@/pixi/aoe'
-import { YmToPx } from '@/pixi/utils'
+
+import { createMaskAoE } from '../_mask'
 
 function createAoESingle(app: Application, rotate = false, ring = false, activate = false) {
   const rect1 = AoE.createRect(40, 6, activate ? { colors: AOE_COLORS.tailwind.sky } : undefined).toSprite(app)
@@ -42,36 +43,8 @@ function createAoE(app: Application, rotate: boolean | 'all' = false, ring = fal
   return aoe
 }
 
-function createMask(inverse = false) {
-  const aoeMask = new Graphics()
-  if (inverse) {
-    // 环形遮罩（即电网范围）
-    aoeMask.circle(0, 0, 15 * YmToPx)
-    aoeMask.fill({ color: 'white' })
-    aoeMask.circle(0, 0, 12 * YmToPx)
-    aoeMask.cut()
-  } else {
-    // 圆形遮罩（即安全场地范围）
-    aoeMask.circle(0, 0, 12 * YmToPx)
-    aoeMask.fill({ color: 'white' })
-  }
-  return aoeMask
-}
-
-export function addXfang(app: Application, container: Container, rotate: boolean | 'all' = false, ring = false, activate = false) {
-  // 被电网覆盖的外圈，几乎透明
-  const aoe1 = createAoE(app, rotate, ring, activate)
-  aoe1.alpha = 0.2
-  const mask1 = createMask(true) // 环形遮罩（即电网范围）
-  aoe1.mask = mask1
-  aoe1.addChild(mask1)
-
-  // 未被电网覆盖的内圈
-  const aoe2 = createAoE(app, rotate, ring, activate)
-  const mask2 = createMask(false) // 圆形遮罩（即安全场地范围）
-  aoe2.mask = mask2
-  aoe2.addChild(mask2)
-
-  container.addChild(aoe1)
-  container.addChild(aoe2)
+export function createXfang(app: Application, rotate: boolean | 'all' = false, ring = false, activate = false) {
+  return createMaskAoE(() => {
+    return createAoE(app, rotate, ring, activate)
+  })
 }
