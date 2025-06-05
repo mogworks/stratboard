@@ -16,28 +16,19 @@ import StratBoard from '@/components/StratBoard.astro'
   import type { RoleType } from '@/pixi/role'
 
   import { AoE, AOE_COLORS } from '@/pixi/aoe'
-  import {
-    convertCoordinates,
-    degToRad,
-    extendCoordinates,
-    findCircleIntersections,
-    getAbsoluteCoordinates,
-    getRelativeCoordinates,
-    normalizeAngleDeg,
-    rotatePoint,
-  } from '@/pixi/coordinates'
+  import { getAbsoluteCoordinates } from '@/pixi/coordinates'
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { createCircles } from '../_aoe'
+  import { createFans } from '../_aoe'
   import { createMaskTargetRing } from '../_target'
   import { waymarkData } from '../_waymark'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = '11'
+  const name = '12'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -52,67 +43,36 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const bossPosition = { r: 7, deg: 330 }
-    const bossRotation = -120
+    const bossPosition = { r: 7.5, deg: -90 }
+    const bossRotation = 180
 
-    const aoe = createCircles(app, [{ position: bossPosition }], 14, { colors: AOE_COLORS.tailwind.red })
+    const aoe = createFans(app, [{ position: bossPosition, rotation: 90 }], 40, 120)
     container.addChild(aoe)
-
-    const intersections = findCircleIntersections({ x: 0, y: 0 }, 12, bossPosition, 14)! // 计算钢铁和电网内边缘交点
-      .map((v) => getRelativeCoordinates(v, bossPosition)) // 转换为BOSS中心坐标系
-      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
-      .map((v) => ({ r: v.r, deg: normalizeAngleDeg(v.deg) })) // 角度标准化（0~360）
-      .sort((a, b) => a.deg - b.deg) // 按角度排序
-      .map((v) => convertCoordinates({ r: v.r, deg: v.deg }, 'cartesian')) // 转换为笛卡尔坐标
-
-    const tankRelativePositions = intersections.map((v, i) =>
-      rotatePoint(v, { x: 0, y: 0 }, degToRad(10 * (i % 2 === 0 ? 1 : -1))),
-    )
-
-    const tankRotations = tankRelativePositions
-      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
-      .map((v) => v.deg) // 取角度
-
-    const tankPositions = tankRelativePositions
-      .map((v) => extendCoordinates(v, 0.5)) // 延长0.5米
-      .map((v) => getAbsoluteCoordinates(v, bossPosition)) // 转换回初始坐标系
-
-    const healerRelativePositions = intersections.map((v, i) =>
-      rotatePoint(v, { x: 0, y: 0 }, degToRad(48 * (i % 2 === 0 ? 1 : -1))),
-    )
-
-    const healerRotations = healerRelativePositions
-      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
-      .map((v) => v.deg) // 取角度
-
-    const healerPositions = healerRelativePositions
-      .map((v) => extendCoordinates(v, 4)) // 延长4米
-      .map((v) => getAbsoluteCoordinates(v, bossPosition)) // 转换回初始坐标系
 
     const fans = AoE.createFans(
       app,
       [
         {
           position: bossPosition,
-          rotation: tankRotations[0],
+          rotation: -135,
           angle: 60,
           options: { colors: AOE_COLORS.tailwind.blue },
         },
         {
           position: bossPosition,
-          rotation: tankRotations[1],
+          rotation: -45,
           angle: 60,
           options: { colors: AOE_COLORS.tailwind.blue },
         },
         {
           position: bossPosition,
-          rotation: healerRotations[0],
+          rotation: 10,
           angle: 30,
           options: { colors: AOE_COLORS.tailwind.green },
         },
         {
           position: bossPosition,
-          rotation: healerRotations[1],
+          rotation: 170,
           angle: 30,
           options: { colors: AOE_COLORS.tailwind.green },
         },
@@ -126,11 +86,21 @@ import StratBoard from '@/components/StratBoard.astro'
     const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
     container.addChild(targetRing)
 
+    const tankPositions = [
+      { r: 4.5, deg: -135 },
+      { r: 4.5, deg: -45 },
+    ].map((v) => getAbsoluteCoordinates(v, bossPosition))
+
+    const healerPositions = [
+      { r: 6, deg: 170 },
+      { r: 6, deg: 10 },
+    ].map((v) => getAbsoluteCoordinates(v, bossPosition))
+
     const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
-      { type: 'tank', tag: 'MT', x: tankPositions[1].x, y: tankPositions[1].y },
-      { type: 'tank', tag: 'ST', x: tankPositions[0].x, y: tankPositions[0].y },
-      { type: 'healer', tag: 'H1', x: healerPositions[1].x, y: healerPositions[1].y },
-      { type: 'healer', tag: 'H2', x: healerPositions[0].x, y: healerPositions[0].y },
+      { type: 'tank', tag: 'MT', x: tankPositions[0].x, y: tankPositions[0].y },
+      { type: 'tank', tag: 'ST', x: tankPositions[1].x, y: tankPositions[1].y },
+      { type: 'healer', tag: 'H1', x: healerPositions[0].x, y: healerPositions[0].y },
+      { type: 'healer', tag: 'H2', x: healerPositions[1].x, y: healerPositions[1].y },
     ]
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
