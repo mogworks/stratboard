@@ -3,7 +3,7 @@ import type { FillInput } from 'pixi.js'
 import { Graphics } from 'pixi.js'
 
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
-import { YmToPx } from './utils'
+import { YmToPx } from './scale'
 
 export function createRectGraphics(width: number, height: number, style?: FillInput, resolution = DEFAULT_AOE_RESOLUTION) {
   const rect = new Graphics()

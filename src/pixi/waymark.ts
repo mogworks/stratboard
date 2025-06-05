@@ -1,7 +1,7 @@
 import { Assets, Container, Sprite } from 'pixi.js'
 import { z } from 'zod'
 
-import { getScale, YmToPx } from './utils'
+import { getScale, YmToPx } from './scale'
 
 import One_bg from '/assets/waymark/1_bg@3x.png?url'
 import One from '/assets/waymark/1@3x.png?url'

@@ -1,6 +1,6 @@
 import { Assets, Container, Sprite } from 'pixi.js'
 
-import { YmToPx } from '@/pixi/utils'
+import { YmToPx } from '@/pixi/scale'
 
 import { splitContainerAsync } from './_mask'
 

@@ -5,7 +5,7 @@ import { Container } from 'pixi.js'
 import type { AoECreateOptions } from '@/pixi/aoe'
 
 import { AoE } from '@/pixi/aoe'
-import { YmToPx } from '@/pixi/utils'
+import { YmToPx } from '@/pixi/scale'
 
 import { splitContainer } from './_mask'
 

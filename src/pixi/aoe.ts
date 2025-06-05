@@ -6,7 +6,7 @@ import { Container, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
 import * as G from './graphics'
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
-import { YmToPx } from './utils'
+import { YmToPx } from './scale'
 
 export const AOE_COLORS = {
   default: {

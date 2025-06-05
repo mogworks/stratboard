@@ -1,6 +1,6 @@
 import { Container, Graphics } from 'pixi.js'
 
-import { YmToPx } from '@/pixi/utils'
+import { YmToPx } from '@/pixi/scale'
 
 // 创建电网范围或安全场地范围的遮罩
 export function createMask(inverse = false) {
