@@ -259,7 +259,7 @@ export class AoE extends Container {
    */
   static createRects(
     app: Application,
-    params: { position: Coordinates; rotation?: number; width?: number; height?: number; options?: AoECreateOptions }[],
+    params: { position?: Coordinates; rotation?: number; width?: number; height?: number; options?: AoECreateOptions }[],
     defaultWidth: number = 0,
     defaultHeight: number = 0,
     defaultOptions: AoECreateOptions = {},
@@ -271,7 +271,7 @@ export class AoE extends Container {
         param.height ?? defaultHeight,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      rect.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      rect.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       rect.rotation = degToRad(param.rotation ?? 0)
       c.addChild(rect)
     })
@@ -300,7 +300,7 @@ export class AoE extends Container {
    */
   static createRays(
     app: Application,
-    params: { position: Coordinates; rotation?: number; width?: number; length?: number; options?: AoECreateOptions }[],
+    params: { position?: Coordinates; rotation?: number; width?: number; length?: number; options?: AoECreateOptions }[],
     defaultWidth: number = 0,
     defaultLength: number = 0,
     defaultOptions: AoECreateOptions = {},
@@ -312,7 +312,7 @@ export class AoE extends Container {
         param.length ?? defaultLength,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      ray.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      ray.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       ray.rotation = degToRad(param.rotation ?? 0)
       c.addChild(ray)
     })
@@ -341,14 +341,14 @@ export class AoE extends Container {
    */
   static createCircles(
     app: Application,
-    params: { position: Coordinates; radius?: number; options?: AoECreateOptions }[],
+    params: { position?: Coordinates; radius?: number; options?: AoECreateOptions }[],
     defaultRadius: number = 0,
     defaultOptions: AoECreateOptions = {},
   ) {
     const c = new Container()
     params.forEach((param) => {
       const circle = AoE.createCircle(param.radius ?? defaultRadius, param.options ?? defaultOptions).toSprite(app)
-      circle.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      circle.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       c.addChild(circle)
     })
     return c
@@ -380,7 +380,7 @@ export class AoE extends Container {
    */
   static createRings(
     app: Application,
-    params: { position: Coordinates; innerRadius?: number; outerRadius?: number; options?: AoECreateOptions }[],
+    params: { position?: Coordinates; innerRadius?: number; outerRadius?: number; options?: AoECreateOptions }[],
     defaultInnerRadius: number = 0,
     defaultOuterRadius: number = 0,
     defaultOptions: AoECreateOptions = {},
@@ -392,7 +392,7 @@ export class AoE extends Container {
         param.outerRadius ?? defaultOuterRadius,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      ring.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      ring.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       c.addChild(ring)
     })
     return c
@@ -421,7 +421,7 @@ export class AoE extends Container {
    */
   static createFans(
     app: Application,
-    params: { position: Coordinates; rotation?: number; radius?: number; angle?: number; options?: AoECreateOptions }[],
+    params: { position?: Coordinates; rotation?: number; radius?: number; angle?: number; options?: AoECreateOptions }[],
     defaultRadius: number = 0,
     defaultAngle: number = 0,
     defaultOptions: AoECreateOptions = {},
@@ -433,7 +433,7 @@ export class AoE extends Container {
         param.angle ?? defaultAngle,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      fan.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      fan.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       fan.rotation = degToRad(param.rotation ?? 0)
       c.addChild(fan)
     })

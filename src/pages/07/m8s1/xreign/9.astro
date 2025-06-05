@@ -18,7 +18,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { createCircleAoE } from '../_aoe'
+  import { createCircles } from '../_aoe'
   import { createMaskTargetRing } from '../_target'
   import { waymarkData } from '../_waymark'
 
@@ -39,7 +39,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const aoe = createCircleAoE(app, 14, [{ r: 7, a: 330 }], { colors: AOE_COLORS.tailwind.blue })
+    const aoe = createCircles(app, [{ position: { r: 7, deg: 330 } }], 14, { colors: AOE_COLORS.tailwind.blue })
     container.addChild(aoe)
 
     await setWaymark(container, waymarkData, 0.65)
