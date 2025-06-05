@@ -3,9 +3,9 @@ import Layout from '@/layouts/Layout.astro'
 import StratBoard from '@/components/StratBoard.astro'
 ---
 
-<Layout title="M7S">
+<Layout title="M8S1">
   <div class="flex h-screen w-screen items-center justify-center">
-    <StratBoard key="stratboard" />
+    <StratBoard key="stratboard" canvasClass="h-full w-full" />
   </div>
 </Layout>
 
@@ -13,50 +13,46 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { ShaderAoE } from '@/pixi/aoe'
+  import { AOE_COLORS } from '@/pixi/aoe'
   import { getScale, YmToPx } from '@/pixi/utils'
+  import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import floor_img from '/assets/07/m5s/floor_2@3x.png?url'
+  import { createCircleAoE } from '../_aoe'
+  import { createMaskTargetRing } from '../_target'
+  import { waymarkData } from '../_waymark'
 
-  const name = 'shader'
+  import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
+
+  const name = '9'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
     const container = new Container()
     container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
     floor.anchor.set(0.5, 0.5)
-    floor.scale.set(getScale())
+    floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const rect = ShaderAoE.createRect(50, 50).toSprite(app)
-    rect.position.set(-25 * YmToPx, 0)
-    container.addChild(rect)
+    const aoe = createCircleAoE(app, 14, [{ r: 7, a: 330 }], { colors: AOE_COLORS.tailwind.blue })
+    container.addChild(aoe)
 
-    const ray = ShaderAoE.createRay(8, 40).toSprite(app)
-    ray.rotation = Math.PI / 4
-    container.addChild(ray)
+    await setWaymark(container, waymarkData, 0.65)
 
-    const ring = ShaderAoE.createRing(9, 18).toSprite(app)
-    container.addChild(ring)
+    const targetRing = await createMaskTargetRing(7, 330, -120)
+    container.addChild(targetRing)
 
-    const fan = ShaderAoE.createFan(50, 30).toSprite(app)
-    fan.rotation = -Math.PI / 4
-    container.addChild(fan)
-
-    const squareMask = new Graphics()
-    const width = 50 * YmToPx
-    const height = 50 * YmToPx
-    squareMask.rect(-width / 2, -height / 2, width, height)
-    squareMask.fill({ color: 'white' })
-    container.setMask({ mask: squareMask })
-    container.addChild(squareMask)
-
-    app.stage.addChild(container)
+    const circleMask = new Graphics()
+    const circleRadius = 15.1 * YmToPx
+    circleMask.circle(0, 0, circleRadius)
+    circleMask.fill({ color: 'white' })
+    container.mask = circleMask
+    container.addChild(circleMask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

@@ -4,10 +4,6 @@ import type { Application, FillInput, Graphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { Container, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
-import type { RangeAreaFilterPreset } from '@/filters/RangeAreaFilter'
-
-import { RangeAreaFilter } from '@/filters/RangeAreaFilter'
-
 import * as G from './graphics'
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
 import { YmToPx } from './utils'
@@ -136,11 +132,26 @@ export const AOE_COLORS = {
 export type AoEColors = typeof AOE_COLORS.default
 
 export interface AoECreateOptions {
-  colors?: Partial<AoEColors>
-  aoeAlpha?: number
-  innerShadowOptions?: Partial<GlowFilterOptions>
-  outerGlowOptions?: Partial<GlowFilterOptions>
+  /** 渲染分辨率，影响最终效果的精细度和性能，默认 2 */
   resolution?: number
+
+  /**
+   * AoE 颜色配置，默认 AOE_COLORS.default
+   *
+   * 其中，innerShadow、outerGlow 会被 innerShadowOptions、outerGlowOptions 的同名选项覆盖
+   *
+   * @example { aoe: '#fb923c', innerShadow: '#ff751f', outerGlow: '#fffc79' }
+   */
+  colors?: Partial<AoEColors>
+
+  /** AoE 主体透明度，范围 0-1，默认 0.25 */
+  aoeAlpha?: number
+
+  /** 内阴影滤镜配置，默认 {} */
+  innerShadowOptions?: Partial<GlowFilterOptions>
+
+  /** 外发光滤镜配置，默认 {}  */
+  outerGlowOptions?: Partial<GlowFilterOptions>
 }
 
 export type AoEType = 'rect' | 'ray' | 'circle' | 'ring' | 'fan'
@@ -164,26 +175,43 @@ export class AoETexture extends Texture {
   }
 }
 
-export class BaseAoE extends Container {
+export class AoE extends Container {
   type: AoEType
   resolution: number
 
-  constructor(type: AoEType, resolution: number) {
+  constructor(
+    type: AoEType,
+    resolution: number,
+    fn: (style?: FillInput) => Graphics,
+    colors?: Partial<AoEColors>,
+    aoeAlpha?: number,
+    innerShadowOptions?: Partial<GlowFilterOptions>,
+    outerGlowOptions?: Partial<GlowFilterOptions>,
+  ) {
     super()
 
     this.type = type
     this.resolution = resolution
-  }
 
-  private getComputedRectangle() {
-    const bounds = this.getLocalBounds()
-    const rect = new Rectangle(
-      bounds.x - YmToPx * this.resolution,
-      bounds.y - YmToPx * this.resolution,
-      bounds.width + YmToPx * this.resolution * 2,
-      bounds.height + YmToPx * this.resolution * 2,
+    const innerShadow = AoE.createInnerShadow(
+      fn,
+      { color: colors?.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
+      resolution,
     )
-    return rect
+    const outerGlow = AoE.createOuterGlow(
+      fn,
+      { color: colors?.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      resolution,
+    )
+    const aoe = fn({ color: colors?.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha ?? 0.25 })
+
+    innerShadow.label = 'inner_shadow'
+    outerGlow.label = 'outer_glow'
+    aoe.label = 'aoe'
+
+    this.addChild(innerShadow)
+    this.addChild(outerGlow)
+    this.addChild(aoe)
   }
 
   /**
@@ -205,51 +233,21 @@ export class BaseAoE extends Container {
     sprite.scale.set(1 / this.resolution)
     return sprite
   }
-}
-
-/**
- * 不使用shader的版本（兼容性强一些）
- */
-export class AoE extends BaseAoE {
-  declare type: AoEType
-  declare resolution: number
-
-  constructor(
-    type: AoEType,
-    resolution: number,
-    fn: (style?: FillInput) => Graphics,
-    aoeStyle?: FillInput,
-    innerShadowOptions: GlowFilterOptions = {},
-    outerGlowOptions: GlowFilterOptions = {},
-  ) {
-    super(type, resolution)
-
-    const innerShadow = AoE.createInnerShadow(fn, innerShadowOptions, resolution)
-    const outerGlow = AoE.createOuterGlow(fn, outerGlowOptions, resolution)
-    const aoe = fn(aoeStyle)
-
-    innerShadow.label = 'inner_shadow'
-    outerGlow.label = 'outer_glow'
-    aoe.label = 'aoe'
-
-    this.addChild(innerShadow)
-    this.addChild(outerGlow)
-    this.addChild(aoe)
-  }
 
   /**
    * 创建矩形AoE效果
    */
   static createRect(width: number, height: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_AOE_RESOLUTION } = options
+    const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     return new AoE(
       'rect',
       resolution,
       style => G.createRectGraphics(width, height, style, resolution),
-      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      options.colors,
+      options.aoeAlpha,
+      options.innerShadowOptions,
+      options.outerGlowOptions,
     )
   }
 
@@ -257,15 +255,16 @@ export class AoE extends BaseAoE {
    * 创建射线AoE效果
    */
   static createRay(width: number, length: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_AOE_RESOLUTION } = options
+    const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     return new AoE(
       'ray',
       resolution,
       style => G.createRectGraphics(length, width, style, resolution),
-      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      options.colors,
+      options.aoeAlpha,
+      options.innerShadowOptions,
+      options.outerGlowOptions,
     )
   }
 
@@ -273,15 +272,16 @@ export class AoE extends BaseAoE {
    * 创建圆形AoE效果
    */
   static createCircle(radius: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_AOE_RESOLUTION } = options
+    const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     return new AoE(
       'circle',
       resolution,
       style => G.createCircleGraphics(radius, style, resolution),
-      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      options.colors,
+      options.aoeAlpha,
+      options.innerShadowOptions,
+      options.outerGlowOptions,
     )
   }
 
@@ -293,15 +293,16 @@ export class AoE extends BaseAoE {
       throw new Error('内圆半径必须小于外圆半径')
     }
 
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_AOE_RESOLUTION } = options
+    const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     return new AoE(
       'ring',
       resolution,
       style => G.createRingGraphics(innerRadius, outerRadius, style, resolution),
-      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      options.colors,
+      options.aoeAlpha,
+      options.innerShadowOptions,
+      options.outerGlowOptions,
     )
   }
 
@@ -309,20 +310,36 @@ export class AoE extends BaseAoE {
    * 创建扇形AoE效果
    */
   static createFan(radius: number, angle: number, options: AoECreateOptions = {}): AoE {
-    const { colors = {}, aoeAlpha = 0.25, innerShadowOptions = {}, outerGlowOptions = {}, resolution = DEFAULT_AOE_RESOLUTION } = options
+    const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     const aoe = new AoE(
       'fan',
       resolution,
       style => G.createFanGraphics(radius, angle, style, resolution),
-      { color: colors.aoe ?? AOE_COLORS.default.aoe, alpha: aoeAlpha },
-      { color: colors.innerShadow ?? AOE_COLORS.default.innerShadow, ...innerShadowOptions },
-      { color: colors.outerGlow ?? AOE_COLORS.default.outerGlow, ...outerGlowOptions },
+      options.colors,
+      options.aoeAlpha,
+      options.innerShadowOptions,
+      options.outerGlowOptions,
     )
     return aoe
   }
 
-  private static createInnerShadow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}, resolution = DEFAULT_AOE_RESOLUTION) {
+  private getComputedRectangle() {
+    const bounds = this.getLocalBounds()
+    const rect = new Rectangle(
+      bounds.x - YmToPx * this.resolution,
+      bounds.y - YmToPx * this.resolution,
+      bounds.width + YmToPx * this.resolution * 2,
+      bounds.height + YmToPx * this.resolution * 2,
+    )
+    return rect
+  }
+
+  private static createInnerShadow(
+    fn: (style?: FillInput) => Graphics,
+    options: GlowFilterOptions = {},
+    resolution = DEFAULT_AOE_RESOLUTION,
+  ) {
     const c = new Container()
     const g = fn({ color: 'white', alpha: 1 })
     c.addChild(g)
@@ -340,7 +357,11 @@ export class AoE extends BaseAoE {
     return c
   }
 
-  private static createOuterGlow(fn: (style?: FillInput) => Graphics, options: GlowFilterOptions = {}, resolution = DEFAULT_AOE_RESOLUTION) {
+  private static createOuterGlow(
+    fn: (style?: FillInput) => Graphics,
+    options: GlowFilterOptions = {},
+    resolution = DEFAULT_AOE_RESOLUTION,
+  ) {
     const c = new Container()
     const g = fn({ color: 'white', alpha: 1 })
     c.addChild(g)
@@ -356,92 +377,5 @@ export class AoE extends BaseAoE {
       }),
     ]
     return c
-  }
-}
-
-/**
- * 使用shader的版本
- */
-export class ShaderAoE extends BaseAoE {
-  declare type: AoEType
-  declare resolution: number
-
-  constructor(
-    type: AoEType,
-    resolution: number,
-    preset: RangeAreaFilterPreset,
-    fn: (style?: FillInput) => Graphics,
-  ) {
-    super(type, resolution)
-
-    const aoe = fn({ color: '#000000' })
-    aoe.label = 'aoe'
-
-    this.addChild(aoe)
-    this.filters = [new RangeAreaFilter({ preset })]
-  }
-
-  /**
-   * 创建矩形AoE效果
-   */
-  static createRect(width: number, height: number, resolution = DEFAULT_AOE_RESOLUTION, preset: RangeAreaFilterPreset = 'default'): ShaderAoE {
-    return new ShaderAoE(
-      'rect',
-      resolution,
-      preset,
-      style => G.createRectGraphics(width, height, style, resolution),
-    )
-  }
-
-  /**
-   * 创建射线AoE效果
-   */
-  static createRay(width: number, length: number, resolution = DEFAULT_AOE_RESOLUTION, preset: RangeAreaFilterPreset = 'default'): ShaderAoE {
-    return new ShaderAoE(
-      'ray',
-      resolution,
-      preset,
-      style => G.createRectGraphics(length, width, style, resolution),
-    )
-  }
-
-  /**
-   * 创建圆形AoE效果
-   */
-  static createCircle(radius: number, resolution = DEFAULT_AOE_RESOLUTION, preset: RangeAreaFilterPreset = 'default'): ShaderAoE {
-    return new ShaderAoE(
-      'circle',
-      resolution,
-      preset,
-      style => G.createCircleGraphics(radius, style, resolution),
-    )
-  }
-
-  /**
-   * 创建环形AoE效果
-   */
-  static createRing(innerRadius: number, outerRadius: number, resolution = DEFAULT_AOE_RESOLUTION, preset: RangeAreaFilterPreset = 'default'): ShaderAoE {
-    if (innerRadius >= outerRadius) {
-      throw new Error('内圆半径必须小于外圆半径')
-    }
-
-    return new ShaderAoE(
-      'ring',
-      resolution,
-      preset,
-      style => G.createRingGraphics(innerRadius, outerRadius, style, resolution),
-    )
-  }
-
-  /**
-   * 创建扇形AoE效果
-   */
-  static createFan(radius: number, angle: number, resolution = DEFAULT_AOE_RESOLUTION, preset: RangeAreaFilterPreset = 'default'): ShaderAoE {
-    return new ShaderAoE(
-      'fan',
-      resolution,
-      preset,
-      style => G.createFanGraphics(radius, angle, style, resolution),
-    )
   }
 }
