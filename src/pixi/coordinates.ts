@@ -241,10 +241,10 @@ export function isValidCoordinates(coord: unknown): coord is Coordinates {
 }
 
 // Scale coordinates by a factor
-export function scale(coord: Coordinates, factor: number): CartesianCoordinates
-export function scale(coord: Coordinates, factor: number): PolarAngleCoordinates
-export function scale(coord: Coordinates, factor: number): PolarRadianCoordinates
-export function scale(coord: Coordinates, factor: number): Coordinates {
+export function scaleCoordinates(coord: Coordinates, factor: number): CartesianCoordinates
+export function scaleCoordinates(coord: Coordinates, factor: number): PolarAngleCoordinates
+export function scaleCoordinates(coord: Coordinates, factor: number): PolarRadianCoordinates
+export function scaleCoordinates(coord: Coordinates, factor: number): Coordinates {
   if (isCartesian(coord)) {
     const validated = CartesianCoordinatesSchema.parse(coord)
     return CartesianCoordinatesSchema.parse({
@@ -267,6 +267,202 @@ export function scale(coord: Coordinates, factor: number): Coordinates {
       r: validated.r * factor,
       rad: validated.rad, // 弧度保持不变
     })
+  }
+
+  throw new Error('不支持的坐标类型')
+}
+
+// 两圆交点计算结果类型
+export type CircleIntersectionResult =
+  | { type: 'no_intersection'; points: [] }
+  | { type: 'one_intersection'; points: [CartesianCoordinates] }
+  | { type: 'two_intersections'; points: [CartesianCoordinates, CartesianCoordinates] }
+  | { type: 'infinite_intersections'; points: [] } // 两圆重合
+
+// 计算两圆交点坐标
+export function findCircleIntersections(
+  center1: Coordinates,
+  radius1: number,
+  center2: Coordinates,
+  radius2: number,
+): CartesianCoordinates[] | undefined {
+  // 验证半径必须为正数
+  if (radius1 <= 0 || radius2 <= 0) {
+    throw new Error('半径必须为正数')
+  }
+
+  // 将坐标统一转换为笛卡尔坐标
+  const cart1 = convertCoordinates(center1, 'cartesian')
+  const cart2 = convertCoordinates(center2, 'cartesian')
+
+  // 计算两圆心之间的距离
+  const d = distance(cart1, cart2)
+
+  // 特殊情况：两圆心重合
+  if (d === 0) {
+    if (radius1 === radius2) {
+      // 两圆重合，有无穷多个交点
+      return []
+    } else {
+      // 同心圆，无交点
+      return undefined
+    }
+  }
+
+  // 判断两圆位置关系
+  const radiusSum = radius1 + radius2
+  const radiusDiff = Math.abs(radius1 - radius2)
+
+  if (d > radiusSum) {
+    // 两圆分离，无交点
+    return undefined
+  }
+
+  if (d < radiusDiff) {
+    // 一圆在另一圆内部，无交点
+    return undefined
+  }
+
+  if (d === radiusSum || d === radiusDiff) {
+    // 两圆外切或内切，有一个交点
+    const a = radius1
+    const ratio = a / d
+    const intersectionPoint: CartesianCoordinates = {
+      x: cart1.x + ratio * (cart2.x - cart1.x),
+      y: cart1.y + ratio * (cart2.y - cart1.y),
+    }
+    return [CartesianCoordinatesSchema.parse(intersectionPoint)]
+  }
+
+  // 两圆相交，有两个交点
+  // 使用几何算法计算交点
+  const a = (radius1 * radius1 - radius2 * radius2 + d * d) / (2 * d)
+  const h = Math.sqrt(radius1 * radius1 - a * a)
+
+  // 计算两圆心连线上的基准点
+  const px = cart1.x + (a * (cart2.x - cart1.x)) / d
+  const py = cart1.y + (a * (cart2.y - cart1.y)) / d
+
+  // 计算两个交点
+  const intersection1: CartesianCoordinates = {
+    x: px + (h * (cart2.y - cart1.y)) / d,
+    y: py - (h * (cart2.x - cart1.x)) / d,
+  }
+
+  const intersection2: CartesianCoordinates = {
+    x: px - (h * (cart2.y - cart1.y)) / d,
+    y: py + (h * (cart2.x - cart1.x)) / d,
+  }
+
+  return [
+    CartesianCoordinatesSchema.parse(intersection1),
+    CartesianCoordinatesSchema.parse(intersection2),
+  ]
+}
+
+// 计算相对坐标
+export function getRelativeCoordinates(
+  point: Coordinates,
+  newOrigin: Coordinates,
+): CartesianCoordinates {
+  // 将两个坐标都转换为笛卡尔坐标
+  const cartPoint = convertCoordinates(point, 'cartesian')
+  const cartOrigin = convertCoordinates(newOrigin, 'cartesian')
+
+  // 计算相对坐标：点坐标 - 新原点坐标
+  const relativeCoord: CartesianCoordinates = {
+    x: cartPoint.x - cartOrigin.x,
+    y: cartPoint.y - cartOrigin.y,
+  }
+
+  return CartesianCoordinatesSchema.parse(relativeCoord)
+}
+
+// 将相对坐标转换为绝对坐标
+export function getAbsoluteCoordinates(
+  relativePoint: Coordinates,
+  origin: Coordinates,
+): CartesianCoordinates {
+  // 将两个坐标都转换为笛卡尔坐标
+  const cartRelative = convertCoordinates(relativePoint, 'cartesian')
+  const cartOrigin = convertCoordinates(origin, 'cartesian')
+
+  // 计算绝对坐标：相对坐标 + 原点坐标
+  const absoluteCoord: CartesianCoordinates = {
+    x: cartRelative.x + cartOrigin.x,
+    y: cartRelative.y + cartOrigin.y,
+  }
+
+  return CartesianCoordinatesSchema.parse(absoluteCoord)
+}
+
+// 延伸坐标：沿着从原点到给定坐标的方向延伸指定长度
+export function extendCoordinates(coord: Coordinates, extensionLength: number): CartesianCoordinates {
+  // 如果是笛卡尔坐标
+  if (isCartesian(coord)) {
+    const validated = CartesianCoordinatesSchema.parse(coord)
+
+    // 如果是原点，无法确定延伸方向
+    if (validated.x === 0 && validated.y === 0) {
+      if (extensionLength === 0) {
+        return validated
+      }
+      throw new Error('无法从原点(0,0)延伸，因为没有明确的方向')
+    }
+
+    // 计算当前距离和方向
+    const currentDistance = Math.sqrt(validated.x ** 2 + validated.y ** 2)
+    const newDistance = currentDistance + extensionLength
+
+    // 如果新距离为负数或零，返回原点
+    if (newDistance <= 0) {
+      return CartesianCoordinatesSchema.parse({ x: 0, y: 0 })
+    }
+
+    // 计算缩放比例
+    const scaleFactor = newDistance / currentDistance
+
+    return CartesianCoordinatesSchema.parse({
+      x: validated.x * scaleFactor,
+      y: validated.y * scaleFactor,
+    })
+  }
+
+  // 如果是极坐标，处理更简单
+  if (isPolarAngle(coord)) {
+    const validated = PolarAngleCoordinatesSchema.parse(coord)
+    const newRadius = validated.r + extensionLength
+
+    // 如果新半径为负数或零，返回原点
+    if (newRadius <= 0) {
+      return CartesianCoordinatesSchema.parse({ x: 0, y: 0 })
+    }
+
+    // 保持角度不变，只改变半径
+    const newPolar = PolarAngleCoordinatesSchema.parse({
+      r: newRadius,
+      deg: validated.deg,
+    })
+
+    return polarAngleToCartesian(newPolar)
+  }
+
+  if (isPolarRadian(coord)) {
+    const validated = PolarRadianCoordinatesSchema.parse(coord)
+    const newRadius = validated.r + extensionLength
+
+    // 如果新半径为负数或零，返回原点
+    if (newRadius <= 0) {
+      return CartesianCoordinatesSchema.parse({ x: 0, y: 0 })
+    }
+
+    // 保持角度不变，只改变半径
+    const newPolar = PolarRadianCoordinatesSchema.parse({
+      r: newRadius,
+      rad: validated.rad,
+    })
+
+    return polarRadianToCartesian(newPolar)
   }
 
   throw new Error('不支持的坐标类型')

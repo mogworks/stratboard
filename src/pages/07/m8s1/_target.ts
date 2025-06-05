@@ -2,7 +2,7 @@ import { Assets, Sprite } from 'pixi.js'
 
 import type { Coordinates } from '@/pixi/coordinates'
 
-import { convertCoordinates, degToRad, scale } from '@/pixi/coordinates'
+import { convertCoordinates, degToRad, scaleCoordinates } from '@/pixi/coordinates'
 import { YmToPx } from '@/pixi/scale'
 
 import { splitContainerAsync } from './_mask'
@@ -14,7 +14,7 @@ export async function createTargetRing(position?: Coordinates, rotation?: number
   const targetRingTexture = await Assets.load(target_ring_img)
   const targetRing = Sprite.from(targetRingTexture)
   targetRing.anchor.set(0.5, 0.54)
-  targetRing.position = convertCoordinates(scale(position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+  targetRing.position = convertCoordinates(scaleCoordinates(position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
   targetRing.rotation = degToRad(rotation ?? 0)
   return targetRing
 }

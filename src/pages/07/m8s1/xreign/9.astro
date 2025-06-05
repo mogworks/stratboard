@@ -14,6 +14,16 @@ import StratBoard from '@/components/StratBoard.astro'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import {
+    convertCoordinates,
+    degToRad,
+    extendCoordinates,
+    findCircleIntersections,
+    getAbsoluteCoordinates,
+    getRelativeCoordinates,
+    normalizeAngleDeg,
+    rotatePoint,
+  } from '@/pixi/coordinates'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -47,17 +57,79 @@ import StratBoard from '@/components/StratBoard.astro'
 
     await setWaymark(container, waymarkData, 0.65)
 
+    const intersections = findCircleIntersections({ x: 0, y: 0 }, 12, bossPosition, 14)! // 计算钢铁和电网内边缘交点
+      .map((v) => getRelativeCoordinates(v, bossPosition)) // 转换为BOSS中心坐标系
+      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
+      .map((v) => ({ r: v.r, deg: normalizeAngleDeg(v.deg) })) // 角度标准化（0~360）
+      .sort((a, b) => a.deg - b.deg) // 按角度排序
+      .map((v) => convertCoordinates({ r: v.r, deg: v.deg }, 'cartesian')) // 转换为笛卡尔坐标
+
+    const tankRelativePositions = intersections.map((v, i) =>
+      rotatePoint(v, { x: 0, y: 0 }, degToRad(6 * (i % 2 === 0 ? 1 : -1))),
+    ) // 旋转6度
+
+    const tankRotations = tankRelativePositions
+      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
+      .map((v) => v.deg) // 取角度
+
+    const tankPositions = tankRelativePositions
+      .map((v) => extendCoordinates(v, 0.4)) // 延长0.4米
+      .map((v) => getAbsoluteCoordinates(v, bossPosition)) // 转换回初始坐标系
+
+    const healerRelativePositions = intersections.map((v, i) =>
+      rotatePoint(v, { x: 0, y: 0 }, degToRad(47 * (i % 2 === 0 ? 1 : -1))),
+    )
+
+    const healerRotations = healerRelativePositions
+      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
+      .map((v) => v.deg) // 取角度
+
+    const healerPositions = healerRelativePositions
+      .map((v) => extendCoordinates(v, 2)) // 延长2米
+      .map((v) => getAbsoluteCoordinates(v, bossPosition)) // 转换回初始坐标系
+
     const fans = AoE.createFans(
       app,
       [
-        { position: bossPosition, rotation: 90, angle: 60, options: { colors: AOE_COLORS.tailwind.blue } },
-        { position: bossPosition, rotation: 210, angle: 60, options: { colors: AOE_COLORS.tailwind.blue } },
-        { position: bossPosition, rotation: 135, angle: 30, options: { colors: AOE_COLORS.tailwind.green } },
-        { position: bossPosition, rotation: 165, angle: 30, options: { colors: AOE_COLORS.tailwind.green } },
+        {
+          position: bossPosition,
+          rotation: tankRotations[0],
+          angle: 60,
+          options: { colors: AOE_COLORS.tailwind.blue },
+        },
+        {
+          position: bossPosition,
+          rotation: tankRotations[1],
+          angle: 60,
+          options: { colors: AOE_COLORS.tailwind.blue },
+        },
+        {
+          position: bossPosition,
+          rotation: healerRotations[0],
+          angle: 30,
+          options: { colors: AOE_COLORS.tailwind.green },
+        },
+        {
+          position: bossPosition,
+          rotation: healerRotations[1],
+          angle: 30,
+          options: { colors: AOE_COLORS.tailwind.green },
+        },
       ],
       40,
     )
     container.addChild(fans)
+
+    const dot = new Graphics()
+    dot.circle(healerPositions[0].x * YmToPx, healerPositions[0].y * YmToPx, 0.3 * YmToPx)
+    dot.circle(healerPositions[1].x * YmToPx, healerPositions[1].y * YmToPx, 0.3 * YmToPx)
+    dot.fill({ color: '#16a34a' })
+    dot.stroke({ color: '#ffffff', width: 1 })
+    dot.circle(tankPositions[0].x * YmToPx, tankPositions[0].y * YmToPx, 0.3 * YmToPx)
+    dot.circle(tankPositions[1].x * YmToPx, tankPositions[1].y * YmToPx, 0.3 * YmToPx)
+    dot.fill({ color: '#2563eb' })
+    dot.stroke({ color: '#ffffff', width: 1 })
+    container.addChild(dot)
 
     const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
     container.addChild(targetRing)

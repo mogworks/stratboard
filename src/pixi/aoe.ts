@@ -6,7 +6,7 @@ import { Container, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
 import type { Coordinates } from './coordinates'
 
-import { convertCoordinates, degToRad, scale } from './coordinates'
+import { convertCoordinates, degToRad, scaleCoordinates } from './coordinates'
 import * as G from './graphics'
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
 import { YmToPx } from './scale'
@@ -271,7 +271,7 @@ export class AoE extends Container {
         param.height ?? defaultHeight,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      rect.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      rect.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       rect.rotation = degToRad(param.rotation ?? 0)
       c.addChild(rect)
     })
@@ -312,7 +312,7 @@ export class AoE extends Container {
         param.length ?? defaultLength,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      ray.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      ray.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       ray.rotation = degToRad(param.rotation ?? 0)
       c.addChild(ray)
     })
@@ -348,7 +348,7 @@ export class AoE extends Container {
     const c = new Container()
     params.forEach((param) => {
       const circle = AoE.createCircle(param.radius ?? defaultRadius, param.options ?? defaultOptions).toSprite(app)
-      circle.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      circle.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       c.addChild(circle)
     })
     return c
@@ -392,7 +392,7 @@ export class AoE extends Container {
         param.outerRadius ?? defaultOuterRadius,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      ring.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      ring.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       c.addChild(ring)
     })
     return c
@@ -433,7 +433,7 @@ export class AoE extends Container {
         param.angle ?? defaultAngle,
         param.options ?? defaultOptions,
       ).toSprite(app)
-      fan.position = convertCoordinates(scale(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      fan.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
       fan.rotation = degToRad(param.rotation ?? 0)
       c.addChild(fan)
     })
