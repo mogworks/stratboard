@@ -17,8 +17,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { splitContainerAsync } from '../_mask'
-  import { createTargetRing } from '../_target'
+  import { createMaskTargetRing } from '../_target'
   import { waymarkData } from '../_waymark'
   import { createFanAoE } from './_aoe'
 
@@ -44,14 +43,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
     await setWaymark(container, waymarkData, 0.65)
 
-    const targetRing = await splitContainerAsync(async () => {
-      const targetRingContainer = new Container()
-      const targetRing = await createTargetRing()
-      targetRing.position.set(0, -7.5 * YmToPx)
-      targetRing.rotation = Math.PI
-      targetRingContainer.addChild(targetRing)
-      return targetRingContainer
-    })
+    const targetRing = await createMaskTargetRing(7.5, -90, 180)
     container.addChild(targetRing)
 
     const circleMask = new Graphics()

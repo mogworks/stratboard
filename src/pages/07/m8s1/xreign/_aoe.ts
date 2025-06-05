@@ -2,18 +2,20 @@ import type { Application } from 'pixi.js'
 
 import { Container } from 'pixi.js'
 
+import type { AoECreateOptions } from '@/pixi/aoe'
+
 import { AoE } from '@/pixi/aoe'
 import { YmToPx } from '@/pixi/utils'
 
 import { splitContainer } from '../_mask'
 
-export function createCircleAoE(app: Application, R: number, params: { r: number; a: number }[]) {
+export function createCircleAoE(app: Application, R: number, params: { r: number; a: number }[], options: AoECreateOptions = {}) {
   return splitContainer(() => {
     const c = new Container()
     params.forEach((p) => {
       const radius = p.r * YmToPx
       const radian = (p.a * Math.PI) / 180
-      const circle = AoE.createCircle(R).toSprite(app)
+      const circle = AoE.createCircle(R, options).toSprite(app)
       circle.position.set(radius * Math.cos(radian), radius * Math.sin(radian))
       c.addChild(circle)
     })
@@ -21,11 +23,11 @@ export function createCircleAoE(app: Application, R: number, params: { r: number
   })
 }
 
-export function createRectAoE(app: Application, W: number, H: number, params: { a: number }[]) {
+export function createRectAoE(app: Application, W: number, H: number, params: { a: number }[], options: AoECreateOptions = {}) {
   return splitContainer(() => {
     const c = new Container()
     params.forEach((p) => {
-      const rect = AoE.createRect(W, H).toSprite(app)
+      const rect = AoE.createRect(W, H, options).toSprite(app)
       rect.rotation = (p.a * Math.PI) / 180
       c.addChild(rect)
     })
@@ -33,13 +35,13 @@ export function createRectAoE(app: Application, W: number, H: number, params: { 
   })
 }
 
-export function createFanAoE(app: Application, R: number, params: { r: number; a: number; A: number; rotation: number }[]) {
+export function createFanAoE(app: Application, R: number, params: { r: number; a: number; A: number; rotation: number }[], options: AoECreateOptions = {}) {
   return splitContainer(() => {
     const c = new Container()
     params.forEach((p) => {
       const radius = p.r * YmToPx
       const radian = (p.a * Math.PI) / 180
-      const fan = AoE.createFan(R, p.A).toSprite(app)
+      const fan = AoE.createFan(R, p.A, options).toSprite(app)
       fan.position.set(radius * Math.cos(radian), radius * Math.sin(radian))
       fan.rotation = p.rotation * Math.PI / 180
       c.addChild(fan)
