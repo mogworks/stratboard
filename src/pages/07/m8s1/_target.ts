@@ -1,4 +1,4 @@
-import { Assets, Sprite } from 'pixi.js'
+import { Assets, Container, Sprite } from 'pixi.js'
 
 import type { Coordinates } from '@/pixi/coordinates'
 
@@ -22,6 +22,9 @@ export async function createTargetRing(position?: Coordinates, rotation?: number
 // 创建带遮罩效果的目标环（目标环被电网覆盖的部分加上一定的透明度，符合游戏内情况）
 export function createMaskTargetRing(position?: Coordinates, rotation?: number) {
   return splitContainerAsync(async () => {
-    return await createTargetRing(position, rotation)
+    const targetRing = await createTargetRing(position, rotation)
+    const container = new Container()
+    container.addChild(targetRing)
+    return container
   })
 }

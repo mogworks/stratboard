@@ -13,18 +13,17 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { AOE_COLORS } from '@/pixi/aoe'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { createRects } from '../_aoe'
+  import { createCircles } from '../_aoe'
   import { createMaskTargetRing } from '../_target'
   import { waymarkData } from '../_waymark'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = '8'
+  const name = '11'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -39,16 +38,22 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const bossPosition = { r: 7.5, deg: -90 }
-    const bossRotation = 0
+    const bossPosition1 = { r: 7, deg: -30 }
+    const bossRotation1 = -120
+    const bossPosition2 = { r: 7.5, deg: -150 }
+    const bossRotation2 = 120
 
-    const aoe = createRects(app, [{ rotation: 90, options: { colors: AOE_COLORS.tailwind.blue } }], 40, 10)
-    container.addChild(aoe)
+    const aoe1 = createCircles(app, [{ position: bossPosition1 }], 14)
+    container.addChild(aoe1)
+    const aoe2 = createCircles(app, [{ position: bossPosition2 }], 14)
+    container.addChild(aoe2)
 
     await setWaymark(container, waymarkData, 0.65)
 
-    const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
-    container.addChild(targetRing)
+    const targetRing1 = await createMaskTargetRing(bossPosition1, bossRotation1)
+    container.addChild(targetRing1)
+    const targetRing2 = await createMaskTargetRing(bossPosition2, bossRotation2)
+    container.addChild(targetRing2)
 
     const circleMask = new Graphics()
     const circleRadius = 15.1 * YmToPx
