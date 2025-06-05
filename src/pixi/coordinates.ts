@@ -202,26 +202,26 @@ export function angleBetweenPoints(from: CartesianCoordinates, to: CartesianCoor
 export function movePoint(
   point: CartesianCoordinates,
   distance: number,
-  angle: number,
+  radian: number,
 ): CartesianCoordinates {
   const validated = CartesianCoordinatesSchema.parse(point)
 
   return CartesianCoordinatesSchema.parse({
-    x: validated.x + distance * Math.cos(angle),
-    y: validated.y + distance * Math.sin(angle),
+    x: validated.x + distance * Math.cos(radian),
+    y: validated.y + distance * Math.sin(radian),
   })
 }
 
 export function rotatePoint(
   point: CartesianCoordinates,
   center: CartesianCoordinates,
-  angle: number,
+  radian: number,
 ): CartesianCoordinates {
   const validatedPoint = CartesianCoordinatesSchema.parse(point)
   const validatedCenter = CartesianCoordinatesSchema.parse(center)
 
-  const cos = Math.cos(angle)
-  const sin = Math.sin(angle)
+  const cos = Math.cos(radian)
+  const sin = Math.sin(radian)
   const dx = validatedPoint.x - validatedCenter.x
   const dy = validatedPoint.y - validatedCenter.y
 

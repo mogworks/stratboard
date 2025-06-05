@@ -38,13 +38,16 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
+    const bossPosition = { r: 10.25, deg: 90 }
+    const bossRotation = 180
+
     const aoe = createCircles(
       app,
       [
         { position: { r: 0, deg: 0 } },
-        { position: { r: 10.25, deg: -150 } },
-        { position: { r: 10.25, deg: -30 } },
-        { position: { r: 10.25, deg: 90 } },
+        { position: bossPosition },
+        { position: { r: bossPosition.r, deg: bossPosition.deg - 120 } },
+        { position: { r: bossPosition.r, deg: bossPosition.deg + 120 } },
       ],
       6,
     )
@@ -52,7 +55,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
     await setWaymark(container, waymarkData, 0.65)
 
-    const targetRing = await createMaskTargetRing(10.25, 90, 180)
+    const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
     container.addChild(targetRing)
 
     const circleMask = new Graphics()
