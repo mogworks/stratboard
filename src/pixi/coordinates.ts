@@ -136,44 +136,47 @@ export function polarRadianToAngle(polar: PolarRadianCoordinates): PolarAngleCoo
   return PolarAngleCoordinatesSchema.parse({ r: validated.r, deg })
 }
 
-// Universal conversion function
-export function convertCoordinates<T extends Coordinates>(
+// Universal conversion function with automatic type inference
+export function convertCoordinates(coord: Coordinates, targetType: 'cartesian'): CartesianCoordinates
+export function convertCoordinates(coord: Coordinates, targetType: 'polar-angle'): PolarAngleCoordinates
+export function convertCoordinates(coord: Coordinates, targetType: 'polar-radian'): PolarRadianCoordinates
+export function convertCoordinates(
   coord: Coordinates,
   targetType: 'cartesian' | 'polar-angle' | 'polar-radian',
-): T {
+): Coordinates {
   if (targetType === 'cartesian') {
     if (isCartesian(coord)) {
-      return coord as T
+      return coord
     }
     if (isPolarAngle(coord)) {
-      return polarAngleToCartesian(coord) as T
+      return polarAngleToCartesian(coord)
     }
     if (isPolarRadian(coord)) {
-      return polarRadianToCartesian(coord) as T
+      return polarRadianToCartesian(coord)
     }
   }
 
   if (targetType === 'polar-angle') {
     if (isPolarAngle(coord)) {
-      return coord as T
+      return coord
     }
     if (isCartesian(coord)) {
-      return cartesianToPolarAngle(coord) as T
+      return cartesianToPolarAngle(coord)
     }
     if (isPolarRadian(coord)) {
-      return polarRadianToAngle(coord) as T
+      return polarRadianToAngle(coord)
     }
   }
 
   if (targetType === 'polar-radian') {
     if (isPolarRadian(coord)) {
-      return coord as T
+      return coord
     }
     if (isCartesian(coord)) {
-      return cartesianToPolarRadian(coord) as T
+      return cartesianToPolarRadian(coord)
     }
     if (isPolarAngle(coord)) {
-      return polarAngleToRadian(coord) as T
+      return polarAngleToRadian(coord)
     }
   }
 
@@ -235,4 +238,36 @@ export function validateCoordinates(coord: unknown): Coordinates {
 
 export function isValidCoordinates(coord: unknown): coord is Coordinates {
   return CoordinatesSchema.safeParse(coord).success
+}
+
+// Scale coordinates by a factor
+export function scale(coord: Coordinates, factor: number): CartesianCoordinates
+export function scale(coord: Coordinates, factor: number): PolarAngleCoordinates
+export function scale(coord: Coordinates, factor: number): PolarRadianCoordinates
+export function scale(coord: Coordinates, factor: number): Coordinates {
+  if (isCartesian(coord)) {
+    const validated = CartesianCoordinatesSchema.parse(coord)
+    return CartesianCoordinatesSchema.parse({
+      x: validated.x * factor,
+      y: validated.y * factor,
+    })
+  }
+
+  if (isPolarAngle(coord)) {
+    const validated = PolarAngleCoordinatesSchema.parse(coord)
+    return PolarAngleCoordinatesSchema.parse({
+      r: validated.r * factor,
+      deg: validated.deg, // 角度保持不变
+    })
+  }
+
+  if (isPolarRadian(coord)) {
+    const validated = PolarRadianCoordinatesSchema.parse(coord)
+    return PolarRadianCoordinatesSchema.parse({
+      r: validated.r * factor,
+      rad: validated.rad, // 弧度保持不变
+    })
+  }
+
+  throw new Error('不支持的坐标类型')
 }

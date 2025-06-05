@@ -4,6 +4,9 @@ import type { Application, FillInput, Graphics } from 'pixi.js'
 import { GlowFilter } from 'pixi-filters'
 import { Container, Point, Rectangle, Sprite, Texture } from 'pixi.js'
 
+import type { Coordinates } from './coordinates'
+
+import { convertCoordinates, degToRad, scale } from './coordinates'
 import * as G from './graphics'
 import { DEFAULT_AOE_RESOLUTION } from './resolutions'
 import { YmToPx } from './scale'
@@ -252,6 +255,30 @@ export class AoE extends Container {
   }
 
   /**
+   * 批量创建矩形AoE效果
+   */
+  static createRects(
+    app: Application,
+    params: { position: Coordinates; rotation?: number; width?: number; height?: number; options?: AoECreateOptions }[],
+    defaultWidth: number = 0,
+    defaultHeight: number = 0,
+    defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const rect = AoE.createRect(
+        param.width ?? defaultWidth,
+        param.height ?? defaultHeight,
+        param.options ?? defaultOptions,
+      ).toSprite(app)
+      rect.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      rect.rotation = degToRad(param.rotation ?? 0)
+      c.addChild(rect)
+    })
+    return c
+  }
+
+  /**
    * 创建射线AoE效果
    */
   static createRay(width: number, length: number, options: AoECreateOptions = {}): AoE {
@@ -269,6 +296,30 @@ export class AoE extends Container {
   }
 
   /**
+   * 批量创建射线AoE效果
+   */
+  static createRays(
+    app: Application,
+    params: { position: Coordinates; rotation?: number; width?: number; length?: number; options?: AoECreateOptions }[],
+    defaultWidth: number = 0,
+    defaultLength: number = 0,
+    defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const ray = AoE.createRay(
+        param.width ?? defaultWidth,
+        param.length ?? defaultLength,
+        param.options ?? defaultOptions,
+      ).toSprite(app)
+      ray.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      ray.rotation = degToRad(param.rotation ?? 0)
+      c.addChild(ray)
+    })
+    return c
+  }
+
+  /**
    * 创建圆形AoE效果
    */
   static createCircle(radius: number, options: AoECreateOptions = {}): AoE {
@@ -283,6 +334,24 @@ export class AoE extends Container {
       options.innerShadowOptions,
       options.outerGlowOptions,
     )
+  }
+
+  /**
+   * 批量创建圆形AoE效果
+   */
+  static createCircles(
+    app: Application,
+    params: { position: Coordinates; radius?: number; options?: AoECreateOptions }[],
+    defaultRadius: number = 0,
+    defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const circle = AoE.createCircle(param.radius ?? defaultRadius, param.options ?? defaultOptions).toSprite(app)
+      circle.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      c.addChild(circle)
+    })
+    return c
   }
 
   /**
@@ -307,6 +376,29 @@ export class AoE extends Container {
   }
 
   /**
+   * 批量创建环形AoE效果
+   */
+  static createRings(
+    app: Application,
+    params: { position: Coordinates; innerRadius?: number; outerRadius?: number; options?: AoECreateOptions }[],
+    defaultInnerRadius: number = 0,
+    defaultOuterRadius: number = 0,
+    defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const ring = AoE.createRing(
+        param.innerRadius ?? defaultInnerRadius,
+        param.outerRadius ?? defaultOuterRadius,
+        param.options ?? defaultOptions,
+      ).toSprite(app)
+      ring.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      c.addChild(ring)
+    })
+    return c
+  }
+
+  /**
    * 创建扇形AoE效果
    */
   static createFan(radius: number, angle: number, options: AoECreateOptions = {}): AoE {
@@ -322,6 +414,30 @@ export class AoE extends Container {
       options.outerGlowOptions,
     )
     return aoe
+  }
+
+  /**
+   * 批量创建扇形AoE效果
+   */
+  static createFans(
+    app: Application,
+    params: { position: Coordinates; rotation?: number; radius?: number; angle?: number; options?: AoECreateOptions }[],
+    defaultRadius: number = 0,
+    defaultAngle: number = 0,
+    defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const fan = AoE.createFan(
+        param.radius ?? defaultRadius,
+        param.angle ?? defaultAngle,
+        param.options ?? defaultOptions,
+      ).toSprite(app)
+      fan.position = convertCoordinates(scale(param.position, YmToPx), 'cartesian')
+      fan.rotation = degToRad(param.rotation ?? 0)
+      c.addChild(fan)
+    })
+    return c
   }
 
   private getComputedRectangle() {
