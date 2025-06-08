@@ -46,7 +46,12 @@ import StratBoard from '@/components/StratBoard.astro'
     const bossPosition = { r: 7.5, deg: -90 }
     const bossRotation = 180
 
-    const aoe = createFans(app, [{ position: bossPosition, rotation: 90 }], 40, 120)
+    const aoe = createFans(
+      app,
+      [{ position: bossPosition, rotation: 90, options: { colors: AOE_COLORS.tailwind.red } }],
+      40,
+      120,
+    )
     container.addChild(aoe)
 
     const fans = AoE.createFans(
