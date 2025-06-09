@@ -10,7 +10,7 @@ import { splitContainer } from './_mask'
 // 批量创建圆形AoE（电网遮罩版本，被电网覆盖的部分调整透明度）
 export function createCircles(
   app: Application,
-  params: { position?: Coordinates; radius?: number; options?: AoECreateOptions }[],
+  params: { alpha?: number; position?: Coordinates; radius?: number; options?: AoECreateOptions }[],
   defaultRadius: number = 0,
   defaultOptions: AoECreateOptions = {},
 ) {
@@ -22,7 +22,7 @@ export function createCircles(
 // 批量创建矩形AoE（电网遮罩版本，被电网覆盖的部分调整透明度）
 export function createRects(
   app: Application,
-  params: { position?: Coordinates; rotation?: number; width?: number; height?: number; options?: AoECreateOptions }[],
+  params: { alpha?: number; position?: Coordinates; rotation?: number; width?: number; height?: number; options?: AoECreateOptions }[],
   defaultWidth: number = 0,
   defaultHeight: number = 0,
   defaultOptions: AoECreateOptions = {},
@@ -35,7 +35,7 @@ export function createRects(
 // 批量创建扇形AoE（电网遮罩版本，被电网覆盖的部分调整透明度）
 export function createFans(
   app: Application,
-  params: { position?: Coordinates; rotation?: number; radius?: number; angle?: number; options?: AoECreateOptions }[],
+  params: { alpha?: number; position?: Coordinates; rotation?: number; radius?: number; angle?: number; options?: AoECreateOptions }[],
   defaultRadius: number = 0,
   defaultAngle: number = 0,
   defaultOptions: AoECreateOptions = {},
