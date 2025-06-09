@@ -13,6 +13,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
+  import { convertCoordinates, degToRad } from '@/pixi/coordinates'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -22,7 +23,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = '8'
+  const name = 'revolutionary_t_8'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -37,66 +38,57 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const bossPosition = { r: 7, deg: 330 }
+    const bossPosition = { r: 7, deg: -30 }
     const bossRotation = -120
 
     const aoe = createCircles(app, [{ position: bossPosition }], 14)
     container.addChild(aoe)
 
-    await setWaymark(
+    const waymarks = await setWaymark(
       container,
       {
-        A: { X: 0, Z: -8.5 },
+        A: { X: 0, Z: -8.5, alpha: 1 },
         B: { X: 8.5, Z: 0 },
-        C: { X: 0, Z: 8.5 },
+        C: { X: 0, Z: 8.5, alpha: 1 },
         D: { X: -8.5, Z: 0 },
         One: { X: -6, Z: -6, alpha: 1 },
         Two: { X: 6, Z: -6 },
         Three: { X: 6, Z: 6, alpha: 1 },
         Four: { X: -6, Z: 6 },
       },
-      0.5,
+      0.4,
     )
+    for (const waymark of waymarks.values()) {
+      waymark.fgSprite!.rotation = degToRad(60)
+    }
 
     const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
     container.addChild(targetRing)
 
-    const lines = new Graphics()
-    lines.rect(-7.3 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(-4.9 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(7.1 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(4.7 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    container.addChild(lines)
-
-    const tankPositions = [
-      { x: -7.2, y: -9, color: '#2563eb' },
-      { x: -4.8, y: -10.5, color: '#dc2626' },
-      { x: 7.2, y: 9.2, color: '#dc2626' },
-      { x: 4.8, y: 10.6, color: '#2563eb' },
+    const positions = [
+      { p: { r: 11.65, deg: 45 }, color: '#dc2626' },
+      { p: { r: 11.65, deg: 67.5 }, color: '#2563eb' },
+      { p: { r: 11.65, deg: 225 }, color: '#2563eb' },
+      { p: { r: 11.65, deg: 247.5 }, color: '#dc2626' },
     ]
 
     const dot = new Graphics()
-    tankPositions.forEach((tankPosition) => {
-      dot.circle(tankPosition.x * YmToPx, tankPosition.y * YmToPx, 0.3 * YmToPx)
-      dot.fill({ color: tankPosition.color })
+    positions.forEach((position) => {
+      const p = convertCoordinates(position.p, 'cartesian')
+      dot.circle(p.x * YmToPx, p.y * YmToPx, 0.3 * YmToPx)
+      dot.fill({ color: position.color })
       dot.stroke({ color: '#ffffff', width: 1 })
     })
     container.addChild(dot)
 
+    container.rotation = degToRad(-60)
+
     const circleMask = new Graphics()
     const circleRadius = 15.1 * YmToPx
-    circleMask.circle(0, 0, circleRadius)
+    circleMask.circle(app.screen.width / 2, app.screen.height / 2, circleRadius)
     circleMask.fill({ color: 'white' })
-    container.mask = circleMask
-    container.addChild(circleMask)
+    app.stage.mask = circleMask
+    app.stage.addChild(circleMask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

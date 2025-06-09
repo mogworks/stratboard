@@ -13,7 +13,6 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { AOE_COLORS } from '@/pixi/aoe'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
@@ -23,7 +22,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = '7'
+  const name = 'revolutionary_t_3'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -38,22 +37,22 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale(50, 0.78))
     container.addChild(floor)
 
-    const bossPosition = { r: 7, deg: -30 }
-    const bossRotation = 60
+    const bossPosition = { r: 10.25, deg: 90 }
+    const bossRotation = 0
 
-    const aoe = createRects(app, [{ rotation: 150, options: { colors: AOE_COLORS.tailwind.red } }], 40, 10)
+    const aoe = createRects(app, [{ rotation: 90 }], 40, 10)
     container.addChild(aoe)
 
     await setWaymark(
       container,
       {
         A: { X: 0, Z: -8.5 },
-        B: { X: 8.5, Z: 0 },
+        B: { X: 8.5, Z: 0, alpha: 1 },
         C: { X: 0, Z: 8.5 },
-        D: { X: -8.5, Z: 0 },
-        One: { X: -6, Z: -6, alpha: 1 },
+        D: { X: -8.5, Z: 0, alpha: 1 },
+        One: { X: -6, Z: -6 },
         Two: { X: 6, Z: -6 },
-        Three: { X: 6, Z: 6, alpha: 1 },
+        Three: { X: 6, Z: 6 },
         Four: { X: -6, Z: 6 },
       },
       0.5,
@@ -63,32 +62,20 @@ import StratBoard from '@/components/StratBoard.astro'
     container.addChild(targetRing)
 
     const lines = new Graphics()
-    lines.rect(-7.3 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(-4.9 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(7.1 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
-    lines.fill({ color: 'white' })
-    lines.stroke({ color: '#db2777', pixelLine: true })
-    lines.rect(4.7 * YmToPx, -20 * YmToPx, 0.2 * YmToPx, 40 * YmToPx)
+    lines.rect(-20 * YmToPx, -0.1 * YmToPx, 40 * YmToPx, 0.2 * YmToPx)
     lines.fill({ color: 'white' })
     lines.stroke({ color: '#db2777', pixelLine: true })
     container.addChild(lines)
 
     const tankPositions = [
-      { x: -7.2, y: -9 },
-      { x: -4.8, y: -10.5 },
-      { x: 7.2, y: 9.2 },
-      { x: 4.8, y: 10.6 },
+      { x: -11.5, y: 1.2 },
+      { x: 11.5, y: 1.2 },
     ]
 
     const dot = new Graphics()
-    tankPositions.forEach((tankPosition) => {
-      dot.circle(tankPosition.x * YmToPx, tankPosition.y * YmToPx, 0.3 * YmToPx)
-    })
-    dot.fill({ color: '#dc2626' })
+    dot.circle(tankPositions[0].x * YmToPx, tankPositions[0].y * YmToPx, 0.3 * YmToPx)
+    dot.circle(tankPositions[1].x * YmToPx, tankPositions[1].y * YmToPx, 0.3 * YmToPx)
+    dot.fill({ color: '#2563eb' })
     dot.stroke({ color: '#ffffff', width: 1 })
     container.addChild(dot)
 

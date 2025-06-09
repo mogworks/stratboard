@@ -13,28 +13,18 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { AOE_COLORS } from '@/pixi/aoe'
-  import {
-    convertCoordinates,
-    degToRad,
-    extendCoordinates,
-    findCircleIntersections,
-    getAbsoluteCoordinates,
-    getRelativeCoordinates,
-    normalizeAngleDeg,
-    rotatePoint,
-  } from '@/pixi/coordinates'
+  import { degToRad, rotatePoint } from '@/pixi/coordinates'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import { createRects } from '../../_aoe'
+  import { createCircles } from '../../_aoe'
   import { createMaskTargetRing } from '../../_target'
   import { waymarkData } from '../../_waymark'
 
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = '3'
+  const name = 'revolutionary_t_2'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -47,46 +37,34 @@ import StratBoard from '@/components/StratBoard.astro'
     const floor = Sprite.from(floorTexture)
     floor.anchor.set(0.5, 0.5)
     floor.scale.set(getScale(50, 0.78))
+    floor.rotation = degToRad(-60)
     container.addChild(floor)
 
-    const bossPosition = { r: 7, deg: -30 }
-    const bossRotation = -120
-    const rotation = degToRad(bossRotation / 2)
-
-    const aoe1 = createRects(app, [{ rotation: 150, options: { colors: AOE_COLORS.tailwind.red } }], 40, 10)
-    container.addChild(aoe1)
-
-    const intersections = findCircleIntersections({ x: 0, y: 0 }, 12, bossPosition, 14)! // 计算钢铁和电网内边缘交点
-      .map((v) => getRelativeCoordinates(v, bossPosition)) // 转换为BOSS中心坐标系
-      .map((v) => convertCoordinates(v, 'polar-angle')) // 转换为极坐标
-      .map((v) => ({ r: v.r, deg: normalizeAngleDeg(v.deg) })) // 角度标准化（0~360）
-      .sort((a, b) => a.deg - b.deg) // 按角度排序
-      .map((v) => convertCoordinates({ r: v.r, deg: v.deg }, 'cartesian')) // 转换为笛卡尔坐标
-
-    const healerRelativePositions = intersections.map((v, i) =>
-      rotatePoint(v, { x: 0, y: 0 }, degToRad(45 * (i % 2 === 0 ? 1 : -1))),
-    )
-
-    const healerPositions = healerRelativePositions
-      .map((v) => extendCoordinates(v, 4)) // 延长2米
-      .map((v) => getAbsoluteCoordinates(v, bossPosition)) // 转换回初始坐标系
+    const aoe = createCircles(app, [{ position: { x: 0, y: -7 } }], 14)
+    container.addChild(aoe)
 
     const waymarks = await setWaymark(container, waymarkData, 0.65)
     for (const waymark of waymarks.values()) {
-      waymark.fgSprite!.rotation = -rotation
+      waymark.position = rotatePoint(waymark.position, { x: 0, y: 0 }, degToRad(-60))
+      waymark.bgSprite!.rotation = degToRad(-60)
     }
 
-    const targetRing = await createMaskTargetRing(bossPosition, bossRotation + 180)
+    const bossPosition = { r: 7, deg: -90 }
+    const targetRing = await createMaskTargetRing(bossPosition, 180)
     container.addChild(targetRing)
 
+    const lines = new Graphics()
+    lines.rect(-20 * YmToPx, -0.1 * YmToPx, 40 * YmToPx, 0.2 * YmToPx)
+    lines.fill({ color: 'white' })
+    lines.stroke({ color: '#db2777', pixelLine: true })
+    container.addChild(lines)
+
     const dot = new Graphics()
-    dot.circle(healerPositions[0].x * YmToPx, healerPositions[0].y * YmToPx, 0.3 * YmToPx)
-    dot.circle(healerPositions[1].x * YmToPx, healerPositions[1].y * YmToPx, 0.3 * YmToPx)
-    dot.fill({ color: '#16a34a' })
+    dot.circle(-11.55 * YmToPx, 1.5 * YmToPx, 0.3 * YmToPx)
+    dot.circle(11.55 * YmToPx, 1.5 * YmToPx, 0.3 * YmToPx)
+    dot.fill({ color: '#2563eb' })
     dot.stroke({ color: '#ffffff', width: 1 })
     container.addChild(dot)
-
-    container.rotation = rotation
 
     const circleMask = new Graphics()
     const circleRadius = 15.1 * YmToPx
