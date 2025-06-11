@@ -1,0 +1,113 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { Coordinates } from '@/pixi/coordinates'
+
+  import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkDataAC1234 } from '../_waymark'
+
+  import floor_img from '/assets/07/m7s/floor_p3_7@3x.png?url'
+
+  const name = 'p3_seeds_ring'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkDataAC1234, 0.65)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // 月环
+    const aoeSprite = AoE.createRing(22.7, 65).toSprite(app)
+    aoeSprite.position.set(0, 35 * YmToPx)
+    container.addChild(aoeSprite)
+
+    // 冰花位置
+    const position: Coordinates[] = [
+      { x: 10, y: 10 },
+      { x: -10, y: 10 },
+      { x: 10, y: -10 },
+      { x: -10, y: -10 },
+    ]
+    // 冰花sprite
+    const rectWidth = 4
+    const rectLength = 100
+    const options = {
+      colors: AOE_COLORS.tailwind.violet,
+      aoeAlpha: 0.2,
+      innerShadowOptions: { alpha: 0.25 },
+      outerGlowOptions: { alpha: 0 },
+    }
+
+    const creatSeeds = (center: Coordinates) => {
+      return AoE.createRects(
+        app,
+        [0, 90, 45, -45].map((r) => ({
+          position: center,
+          rotation: r,
+          width: rectWidth,
+          height: rectLength,
+          options,
+        })),
+      )
+    }
+
+    position.forEach((pos) => {
+      const glyph = creatSeeds(pos)
+      container.addChild(glyph)
+    })
+
+    // role
+    const role = new Role('all', 'All')
+    role.scale.set(0.45)
+    role.position.set(0 * YmToPx, 14 * YmToPx)
+    container.addChild(role)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
