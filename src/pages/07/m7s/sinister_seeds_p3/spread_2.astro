@@ -73,7 +73,7 @@ import StratBoard from '@/components/StratBoard.astro'
           rotation: angleRad * (180 / Math.PI),
         }
       }),
-      35,
+      40,
       25,
     )
     container.addChild(fanSprite)
@@ -90,7 +90,7 @@ import StratBoard from '@/components/StratBoard.astro'
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
       const pos = convertCoordinates(r.coord, 'cartesian')
-      role.scale.set(0.4)
+      role.scale.set(getScale())
       role.position.set(pos.x * YmToPx, pos.y * YmToPx)
       container.addChild(role)
     })

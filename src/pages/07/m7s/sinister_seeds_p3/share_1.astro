@@ -54,7 +54,7 @@ import StratBoard from '@/components/StratBoard.astro'
     // 全员
     const rolePos = { x: 3, y: 3 }
     const role = new Role('all', '全员')
-    role.scale.set(0.45)
+    role.scale.set(getScale())
     role.position.set(rolePos.x * YmToPx, rolePos.y * YmToPx)
     container.addChild(role)
 

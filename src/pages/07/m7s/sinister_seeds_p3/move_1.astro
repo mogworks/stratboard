@@ -127,7 +127,7 @@ import StratBoard from '@/components/StratBoard.astro'
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
       const pos = convertCoordinates(r.coord, 'cartesian')
-      role.scale.set(0.4)
+      role.scale.set(0.65)
       role.position.set(pos.x * YmToPx, pos.y * YmToPx)
       container.addChild(role)
     })
