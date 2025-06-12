@@ -25,7 +25,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import floor_img from '/assets/07/m6s/floor_5@3x.png?url'
   import omen_img from '/assets/fan/360_r20_purple@3x.png?url'
 
-  const name = 'solution_op'
+  const name = 'solution_jp_1'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -37,7 +37,7 @@ import StratBoard from '@/components/StratBoard.astro'
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
     floor.anchor.set(0.5, 0.5)
-    floor.scale.set(getScale())
+    floor.scale.set(getScale(), -getScale())
     container.addChild(floor)
 
     await setWaymark(container, waymarkData1234, 0.65)
@@ -52,7 +52,7 @@ import StratBoard from '@/components/StratBoard.astro'
     const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
       { type: 'tank', tag: '', x: 16.5, y: -19 },
       { type: 'dps', tag: '', x: 19, y: -19 },
-      { type: 'healer', tag: 'H1', x: -19, y: 19 },
+      { type: 'healer', tag: 'H1', x: -19, y: -19 },
       { type: 'healer', tag: 'H2', x: 19, y: 19 },
     ]
 
