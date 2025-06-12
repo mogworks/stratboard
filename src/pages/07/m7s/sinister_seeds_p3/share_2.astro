@@ -1,0 +1,82 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/assets/07/m7s/floor_p3_1@3x.png?url'
+  import share_img from '/assets/game/vfx/lockon/eff/com_share4a1@3x.png?url'
+  import boss_img from '/assets/target_ring/r5@3x.png?url'
+
+  const name = 'p3_sinister_seeds_share_2'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // Boss
+    const bossTexture = await Assets.load(boss_img)
+    const boss = Sprite.from(bossTexture)
+    boss.scale.set(1.4)
+    boss.position.set(0 * YmToPx, 12 * YmToPx)
+    boss.rotation = -Math.PI / 1.3
+    container.addChild(boss)
+
+    // 全员
+    const rolePos = { x: -8, y: 8 }
+    const role = new Role('all', '全员')
+    role.scale.set(0.45)
+    role.position.set(rolePos.x * YmToPx, rolePos.y * YmToPx)
+    container.addChild(role)
+
+    const shareTexture = await Assets.load(share_img)
+    const share = Sprite.from(shareTexture)
+    share.scale.set(0.5)
+    share.position.set((rolePos.x - 10) * YmToPx, (rolePos.y - 10) * YmToPx)
+    container.addChild(share)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

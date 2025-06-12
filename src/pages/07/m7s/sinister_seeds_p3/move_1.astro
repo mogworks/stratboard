@@ -1,0 +1,223 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+  import type { Coordinates } from '@/pixi/coordinates'
+
+  import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { convertCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkDataAC1234 } from '../_waymark'
+
+  import floor_img from '/assets/07/m7s/floor_p3_3@3x.png?url'
+  import lockon_img from '/assets/game/vfx/lockon/eff/lockon5_t0h@3x.png?url'
+
+  const name = 'p3_sinister_seeds_move_1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    await setWaymark(container, waymarkDataAC1234, 0.65)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const roleParams: {
+      type: RoleType
+      tag: string
+      coord: Coordinates
+    }[] = [
+      { type: 'melee', tag: 'D1', coord: { x: -10, y: 0 } },
+      { type: 'melee', tag: 'D2', coord: { x: 10, y: 0 } },
+      { type: 'tank', tag: 'MT', coord: { x: 0, y: -10 } },
+      { type: 'tank', tag: 'ST', coord: { x: 0, y: 10 } },
+      { type: 'healer', tag: 'H1', coord: { x: -19, y: 8 } },
+      { type: 'healer', tag: 'H2', coord: { x: 19, y: 8 } },
+      { type: 'ranged', tag: 'D3', coord: { x: -8, y: -19 } },
+      { type: 'magic', tag: 'D4', coord: { x: -8, y: 19 } },
+    ]
+
+    const circlePos: {
+      type: RoleType
+      tag: string
+      mid: Coordinates
+      end: Coordinates
+    }[] = [
+      { type: 'healer', tag: 'H1', mid: { x: -19, y: 0 }, end: { x: -19, y: -8 } },
+      { type: 'healer', tag: 'H2', mid: { x: 19, y: 0 }, end: { x: 19, y: -8 } },
+      { type: 'ranged', tag: 'D3', mid: { x: 0, y: -19 }, end: { x: 8, y: -19 } },
+      { type: 'magic', tag: 'D4', mid: { x: 0, y: 19 }, end: { x: 8, y: 19 } },
+    ]
+
+    // 冰花替换这里
+    const lockonTecture = await Assets.load(lockon_img)
+    roleParams
+      .filter((r) => ['D1', 'D2', 'MT', 'ST'].includes(r.tag))
+      .forEach((r) => {
+        const circle = AoE.createCircle(6, {
+          colors: AOE_COLORS.tailwind.red,
+          aoeAlpha: 0.1,
+          innerShadowOptions: { alpha: 0 },
+        }).toSprite(app)
+        const pos = convertCoordinates(r.coord, 'cartesian')
+        circle.position.set(pos.x * YmToPx, pos.y * YmToPx)
+        container.addChild(circle)
+
+        const lockon = new Sprite(lockonTecture)
+        lockon.alpha = 1
+        lockon.anchor.set(0.5)
+        lockon.scale.set(0.5)
+        lockon.position.set(pos.x * YmToPx, (pos.y - 4) * YmToPx)
+        container.addChild(lockon)
+      })
+
+    // 步进式aoe
+    roleParams
+      .filter((r) => ['H1', 'H2', 'D3', 'D4'].includes(r.tag))
+      .forEach((r) => {
+        const circle = AoE.createCircle(7, {
+          colors: AOE_COLORS.tailwind.amber,
+          aoeAlpha: 0.1,
+        }).toSprite(app)
+        const pos = convertCoordinates(r.coord, 'cartesian')
+        circle.position.set(pos.x * YmToPx, pos.y * YmToPx)
+        container.addChild(circle)
+      })
+    circlePos.forEach((c) => {
+      const circle = AoE.createCircle(7, {
+        colors: AOE_COLORS.tailwind.amber,
+        aoeAlpha: 0.1,
+      }).toSprite(app)
+      const pos = convertCoordinates(c.mid, 'cartesian')
+      circle.position.set(pos.x * YmToPx, pos.y * YmToPx)
+      container.addChild(circle)
+    })
+
+    // 职业图标
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      const pos = convertCoordinates(r.coord, 'cartesian')
+      role.scale.set(0.4)
+      role.position.set(pos.x * YmToPx, pos.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // 箭头
+    function drawArrow(
+      from: { x: number; y: number },
+      to: { x: number; y: number },
+      color = 0x65a30d,
+      shrinkRatio = 0.92,
+    ) {
+      const dx = to.x - from.x
+      const dy = to.y - from.y
+      const angle = Math.atan2(dy, dx)
+
+      const length = Math.sqrt(dx * dx + dy * dy)
+      const shrinkDist = length * (1 - shrinkRatio)
+      const dirX = dx / length
+      const dirY = dy / length
+      const shortFrom = {
+        x: from.x + dirX * shrinkDist,
+        y: from.y + dirY * shrinkDist,
+      }
+      const shortTo = {
+        x: to.x - dirX * shrinkDist,
+        y: to.y - dirY * shrinkDist,
+      }
+
+      const arrow = new Graphics()
+      arrow.lineStyle(4, color)
+      arrow.moveTo(shortFrom.x * YmToPx, shortFrom.y * YmToPx)
+      arrow.lineTo(shortTo.x * YmToPx, shortTo.y * YmToPx)
+
+      // 箭头头部三角形
+      const arrowSize = 1.5
+      const endX = shortTo.x * YmToPx
+      const endY = shortTo.y * YmToPx
+
+      const leftX = endX - arrowSize * YmToPx * Math.cos(angle - Math.PI / 8)
+      const leftY = endY - arrowSize * YmToPx * Math.sin(angle - Math.PI / 8)
+      const rightX = endX - arrowSize * YmToPx * Math.cos(angle + Math.PI / 8)
+      const rightY = endY - arrowSize * YmToPx * Math.sin(angle + Math.PI / 8)
+
+      arrow.beginFill(color)
+      arrow.moveTo(endX, endY)
+      arrow.lineTo(leftX, leftY)
+      arrow.lineTo(rightX, rightY)
+      arrow.closePath()
+      arrow.endFill()
+
+      container.addChild(arrow)
+    }
+
+    const arrowPos = circlePos
+      .map((circle) => {
+        const match = roleParams.find((r) => r.tag === circle.tag)
+        if (match) {
+          const from = convertCoordinates(match.coord, 'cartesian')
+          const to = convertCoordinates(circle.end, 'cartesian')
+          return { from, to }
+        }
+        return null
+      })
+      .filter((item): item is { from: { x: number; y: number }; to: { x: number; y: number } } => item !== null)
+
+    arrowPos.forEach((pos) => {
+      drawArrow(pos.from, pos.to)
+    })
+    // 职业图标
+    circlePos.forEach((c) => {
+      const role = new Role(c.type, c.tag)
+      const pos = convertCoordinates(c.end, 'cartesian')
+      role.scale.set(0.4)
+      role.position.set(pos.x * YmToPx, pos.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
