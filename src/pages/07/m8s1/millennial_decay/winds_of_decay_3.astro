@@ -15,8 +15,8 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import type { RoleType } from '@/lib/role'
 
-  import { create_chn_arrow01f } from '@/pixi/channeling/chn_arrow01f'
-  import { convertCoordinates, type Coordinates, degToRad, distance, scaleCoordinates } from '@/pixi/coordinates'
+  import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { convertCoordinates, type Coordinates, degToRad, radToDeg, scaleCoordinates } from '@/pixi/coordinates'
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { setWaymark } from '@/pixi/waymark'
@@ -28,7 +28,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import wolf_of_wind_img from '/assets/07/m8s1/adds/wolf_of_wind_1@3x.png?url'
   import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
 
-  const name = 'winds_of_decay_1'
+  const name = 'winds_of_decay_3'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -60,24 +60,27 @@ import StratBoard from '@/components/StratBoard.astro'
     ]
 
     const roleParams: { type: RoleType; tag: string; p: Coordinates }[] = [
-      { type: 'ranged', tag: 'D3', p: { r: 5, deg: -150 } },
-      { type: 'magic', tag: 'D4', p: { r: 5, deg: -60 } },
-      { type: 'dps', tag: 'D2', p: { r: 5, deg: 30 } },
-      { type: 'melee', tag: 'D1', p: { r: 5, deg: 120 } },
+      { type: 'ranged', tag: 'D3', p: { r: 11, deg: -165 } },
+      { type: 'magic', tag: 'D4', p: { r: 11, deg: -75 } },
+      { type: 'dps', tag: 'D2', p: { r: 11, deg: 15 } },
+      { type: 'melee', tag: 'D1', p: { r: 11, deg: 105 } },
     ]
 
+    const aoeParams = []
     for (let i = 0; i < 4; i++) {
       const from = { r: wolfOfWindPositions[i].r - 0.8, deg: wolfOfWindPositions[i].deg }
       const fromCartesian = convertCoordinates(from, 'cartesian')
       const to = roleParams[i].p
       const toCartesian = convertCoordinates(to, 'cartesian')
-      const d = distance(fromCartesian, toCartesian)
-      const center = { x: (fromCartesian.x + toCartesian.x) / 2, y: (fromCartesian.y + toCartesian.y) / 2 }
-      const tether = await create_chn_arrow01f(app, d * YmToPx)
-      tether.position = scaleCoordinates(center, YmToPx)
-      tether.rotation = Math.atan2(toCartesian.y - fromCartesian.y, toCartesian.x - fromCartesian.x)
-      container.addChild(tether)
+
+      aoeParams.push({
+        position: from,
+        rotation: radToDeg(Math.atan2(toCartesian.y - fromCartesian.y, toCartesian.x - fromCartesian.x)),
+      })
     }
+
+    const aoe = AoE.createFans(app, aoeParams, 30, 30, { colors: AOE_COLORS.tailwind.green, aoeAlpha: 0.12 })
+    container.addChild(aoe)
 
     wolfOfWindPositions.forEach((v) => {
       const wolfOfWind = Sprite.from(wolfOfWindTexture)
