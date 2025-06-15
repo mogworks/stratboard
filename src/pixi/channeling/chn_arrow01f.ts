@@ -6,6 +6,7 @@ import ch_arrow01f_img from '/game/vfx/channeling/texture/ch_arrow01f.png?url'
 import chane08f_img from '/game/vfx/channeling/texture/chane08f.png?url'
 import chane14f_img from '/game/vfx/channeling/texture/chane14f.png?url'
 
+// 实现类似 vfx/channeling/eff/chn_arrow01f.avfx 的效果
 export async function create_chn_arrow01f(app: Application, length: number) {
   const chane08f_texture = await Assets.load(chane08f_img)
   const chane14f_texture = await Assets.load(chane14f_img)
