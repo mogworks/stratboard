@@ -132,6 +132,14 @@ export const AOE_COLORS = {
   },
 }
 
+export const AOE_PRESET = {
+  lockon_circle_aoe_1: {
+    colors: { aoe: '#feca9b', outerGlow: '#feca9b', innerShadow: '#4b3f2f' },
+    aoeAlpha: 0.12,
+    innerShadowOptions: { alpha: 0.4 },
+  },
+} as const
+
 export type AoEColors = typeof AOE_COLORS.default
 
 export interface AoECreateOptions {
