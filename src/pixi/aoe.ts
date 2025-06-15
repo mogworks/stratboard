@@ -132,6 +132,7 @@ export const AOE_COLORS = {
   },
 }
 
+// 模仿游戏内颜色的一些预设
 export const AOE_PRESET = {
   lockon_circle_aoe_1: {
     colors: { aoe: '#feca9b', outerGlow: '#feca9b', innerShadow: '#4b3f2f' },

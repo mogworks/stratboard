@@ -30,7 +30,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import lockon_img from '/game/vfx/lockon/eff/lockon5_t0h@3x.png?url'
   import knockback_img from '/game/vfx/omen/eff/m0501_nockback_omen01d1@3x.png?url'
 
-  const name = 'solution_1'
+  const name = 'solution_3'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -61,17 +61,16 @@ import StratBoard from '@/components/StratBoard.astro'
     const wolfOfWindPositions = [
       { r: 13.6, deg: -90 },
       { r: 13.6, deg: -90 + 36 },
+      { r: 13.6, deg: -90 + 72 },
     ]
 
     const roleParams: { type: RoleType; tag: string; p: Coordinates }[] = [
-      { type: 'tank', tag: 'MT', p: { r: 5, deg: -90 - 22.5 } },
-      { type: 'tank', tag: 'ST', p: { r: 5, deg: -22.5 } },
-      { type: 'healer', tag: 'H1', p: { r: 5, deg: 180 - 22.5 } },
-      { type: 'healer', tag: 'H2', p: { r: 5, deg: 90 - 22.5 } },
-      { type: 'melee', tag: 'D1', p: { r: 5, deg: 180 - 67.5 } },
-      { type: 'ranged', tag: 'D3', p: { r: 5, deg: -90 - 67.5 } },
-      { type: 'dps', tag: 'D2', p: { r: 5, deg: 90 - 67.5 } },
-      { type: 'magic', tag: 'D4', p: { r: 5, deg: -67.5 } },
+      { type: 'tank', tag: 'MT', p: { x: -4.8, y: -7.2 } },
+      { type: 'tank', tag: 'ST', p: { x: 4.8, y: -7.2 } },
+      { type: 'healer', tag: 'H1', p: { r: 3.2, deg: 135 } },
+      { type: 'healer', tag: 'H2', p: { r: 3.2, deg: 45 } },
+      { type: 'dps', tag: '', p: { x: -3.2, y: 0 } },
+      { type: 'dps', tag: '', p: { x: 3.2, y: 0 } },
     ]
 
     const circleAoe = AoE.createCircles(

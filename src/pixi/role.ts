@@ -49,3 +49,12 @@ export class CombinedRole extends CombinedIcon {
     this.tag = tag
   }
 }
+
+export const createRoleIcon = (role: RoleType | CombinedRoleType, tag: string = '') => {
+  if (role.includes('|')) {
+    const [role1, role2] = role.split('|')
+    return new CombinedRole(role1 as 'tank' | 'healer' | 'dps', role2 as 'tank' | 'healer' | 'dps', tag)
+  } else {
+    return new Role(role as RoleType, tag)
+  }
+}
