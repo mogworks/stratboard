@@ -1,0 +1,113 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M7S">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+
+  import { AoE } from '@/pixi/aoe'
+  import { angleBetweenPoints, convertCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/assets/07/m7s/floor_p3_1@3x.png?url'
+  import boss_img from '/assets/target_ring/r5@3x.png?url'
+
+  const name = 'p3_sinister_seeds_spread_2'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const squareMask = new Graphics()
+    const width = 46.4 * YmToPx
+    squareMask.rect(-width / 2, -width / 2, width, width)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    const roleParams: {
+      type: RoleType
+      tag: string
+      coord: { r: number; rad: number }
+    }[] = [
+      { type: 'melee', tag: 'D1', coord: { r: 5, rad: Math.PI / 5 } },
+      { type: 'melee', tag: 'D2', coord: { r: 7, rad: -Math.PI / 1.2 } },
+      { type: 'tank', tag: 'MT', coord: { r: 17, rad: Math.PI / 1.35 } },
+      { type: 'tank', tag: 'ST', coord: { r: 0, rad: -Math.PI / 2.5 } },
+      { type: 'healer', tag: 'H1', coord: { r: 11, rad: Math.PI / 2 } },
+      { type: 'healer', tag: 'H2', coord: { r: 11, rad: -Math.PI } },
+      { type: 'ranged', tag: 'D3', coord: { r: 15, rad: Math.PI / 1.6 } },
+      { type: 'magic', tag: 'D4', coord: { r: 15, rad: Math.PI / 1.2 } },
+    ]
+
+    // 扇形
+    const origin = { x: -4.5, y: 4.5 }
+    const fanSprite = AoE.createFans(
+      app,
+      roleParams.map((role) => {
+        const target = convertCoordinates(role.coord, 'cartesian')
+        const angleRad = angleBetweenPoints(origin, target) // 计算从中心指向目标的弧度
+        return {
+          position: origin,
+          rotation: angleRad * (180 / Math.PI),
+        }
+      }),
+      40,
+      25,
+    )
+    container.addChild(fanSprite)
+
+    // Boss
+    const bossTexture = await Assets.load(boss_img)
+    const boss = Sprite.from(bossTexture)
+    boss.scale.set(1.4)
+    boss.position.set(-5 * YmToPx, 18 * YmToPx)
+    boss.rotation = -Math.PI / 1.3
+    container.addChild(boss)
+
+    // 职业图标
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      const pos = convertCoordinates(r.coord, 'cartesian')
+      role.scale.set(getScale())
+      role.position.set(pos.x * YmToPx, pos.y * YmToPx)
+      container.addChild(role)
+    })
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
