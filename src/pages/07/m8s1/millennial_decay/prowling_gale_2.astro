@@ -1,0 +1,97 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M8S1">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" canvasClass="h-full w-full" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import { convertCoordinates, scaleCoordinates } from '@/pixi/coordinates'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { createMaskTargetRing } from '../_target'
+  import { waymarkData } from '../_waymark'
+
+  import floor_img from '/assets/07/m8s1/floor_1@3x.png?url'
+  import tower_img from '/assets/game/vfx/omen/eff/m0119_trap_01t@3x.png?url'
+  import pillar_img from '/assets/tower/pillar@3x.png?url'
+
+  const name = 'prowling_gale_2'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale(50, 0.78))
+    container.addChild(floor)
+
+    const bossPosition = { r: 0, deg: 0 }
+    const bossRotation = 0
+
+    await setWaymark(container, waymarkData, 0.65)
+
+    const towerTexture = await Assets.load(tower_img)
+    const pillarTexture = await Assets.load(pillar_img)
+    const towerPositions = [
+      { r: 10, deg: -45 },
+      { r: 10, deg: 45 },
+      { r: 10, deg: 135 },
+      { r: 10, deg: 225 },
+    ]
+    for (const towerPosition of towerPositions) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPx)
+      const tower = Sprite.from(towerTexture)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78))
+      tower.position = position
+      tower.blendMode = 'overlay'
+      container.addChild(tower)
+
+      const pillar = Sprite.from(pillarTexture)
+      pillar.anchor.set(0.5, 0.5)
+      pillar.scale.set(0.16)
+      pillar.position = { x: position.x + 0.1 * YmToPx, y: position.y - 0.7 * YmToPx }
+      container.addChild(pillar)
+    }
+
+    const targetRing = await createMaskTargetRing(bossPosition, bossRotation)
+    container.addChild(targetRing)
+
+    const circleMask = new Graphics()
+    const circleRadius = 15.1 * YmToPx
+    circleMask.circle(0, 0, circleRadius)
+    circleMask.fill({ color: 'white' })
+    container.mask = circleMask
+    container.addChild(circleMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
