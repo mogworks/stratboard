@@ -2,9 +2,9 @@ import type { Application } from 'pixi.js'
 
 import { Assets, Container, Graphics, GraphicsContext, TilingSprite } from 'pixi.js'
 
-import ch_arrow01f_img from '/assets/texture/vfx/channeling/texture/ch_arrow01f.png?url'
-import chane08f_img from '/assets/texture/vfx/channeling/texture/chane08f.png?url'
-import chane14f_img from '/assets/texture/vfx/channeling/texture/chane14f.png?url'
+import ch_arrow01f_img from '/game/vfx/channeling/texture/ch_arrow01f.png?url'
+import chane08f_img from '/game/vfx/channeling/texture/chane08f.png?url'
+import chane14f_img from '/game/vfx/channeling/texture/chane14f.png?url'
 
 export async function create_chn_arrow01f(app: Application, length: number) {
   const chane08f_texture = await Assets.load(chane08f_img)
