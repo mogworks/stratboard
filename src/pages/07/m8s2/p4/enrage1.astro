@@ -11,7 +11,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Sprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import type { RoleType } from '@/lib/role'
 
@@ -29,9 +29,11 @@ import StratBoard from '@/components/StratBoard.astro'
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
     const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
@@ -74,6 +76,20 @@ import StratBoard from '@/components/StratBoard.astro'
       role.position.set(pos.x, pos.y)
       container.addChild(role)
     })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.circle(0, 0, 400)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.circle(0, 0, 400)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

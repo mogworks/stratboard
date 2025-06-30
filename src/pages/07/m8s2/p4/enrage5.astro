@@ -11,7 +11,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Sprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import type { RoleType } from '@/lib/role'
 
@@ -21,6 +21,7 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import { platform_to_coord } from '../_utils.ts'
 
+  import floor_0 from '/assets/07/m8s2/floor_1@3x.png?url'
   import floor_img from '/assets/07/m8s2/floor_p1234cut@3x.png?url'
   import stack_tower_img from '/game/vfx/omen/eff/share_trap01k1@3x.png?url'
 
@@ -29,9 +30,26 @@ import StratBoard from '@/components/StratBoard.astro'
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
     const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
+
+    const floor0Texture = await Assets.load(floor_0)
+    const floor0 = Sprite.from(floor0Texture)
+    floor0.anchor.set(0.5, 0.5)
+    floor0.scale.set(getScale() * 1.25)
+    floor0.alpha = 0.25
+    container.addChild(floor0)
+
+    const red = new Graphics()
+    for (let i = 0; i < 5; i++) {
+      const r = (2 * i * Math.PI) / 5
+      red.circle(-17.54 * YmToPx * 1.25 * Math.sin(r), 17.54 * YmToPx * 1.25 * Math.cos(r), 8 * YmToPx * 1.25)
+    }
+    red.fill({ color: 'red', alpha: 0.1 })
+    container.addChild(red)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
@@ -74,6 +92,20 @@ import StratBoard from '@/components/StratBoard.astro'
       role.position.set(pos.x, pos.y)
       container.addChild(role)
     })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.circle(0, 0, 400)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.circle(0, 0, 400)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))
