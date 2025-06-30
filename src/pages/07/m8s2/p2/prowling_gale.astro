@@ -11,20 +11,20 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+  import { Assets, Container, Sprite } from 'pixi.js'
 
   import type { RoleType } from '@/lib/role'
 
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
+  import { createTower } from '@/pixi/tower'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { platform_to_coord } from '../_utils.ts'
 
-  import floor_img from '/assets/07/m8s2/floor_2@3x.png?url'
-  import stack_tower_img from '/game/vfx/omen/eff/share_trap01k1@3x.png?url'
+  import floor_img from '/assets/07/m8s2/floor_9@3x.png?url'
 
-  const name = 'enrage1'
+  const name = 'prowling_gale'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -42,13 +42,15 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale() * 1.25)
     container.addChild(floor)
 
-    const towerTexture = await Assets.load(stack_tower_img)
-    const tower = Sprite.from(towerTexture)
-    tower.anchor.set(0.5, 0.5)
-    tower.scale.set(0.93)
-    const towerPos = platform_to_coord(0)
-    tower.position.set(towerPos.x * YmToPxLarge, towerPos.y * YmToPxLarge)
-    container.addChild(tower)
+    for (let i = 0; i < 4; i++) {
+      const { tower, pillars } = await createTower(2, { r: 17.54, deg: -198 + i * 72 }, 1.25)
+      tower.scale.set(tower.scale.x * 1.5, tower.scale.y * 1.5)
+      container.addChild(tower)
+      pillars.forEach((pillar) => {
+        pillar.scale.set(pillar.scale.x * 1.5, pillar.scale.y * 1.5)
+        container.addChild(pillar)
+      })
+    }
 
     const roleParams: {
       type: RoleType
@@ -56,19 +58,19 @@ import StratBoard from '@/components/StratBoard.astro'
       platform: number
       offset: { vertical: number; horizontal: number }
     }[] = [
-      { type: 'tank', tag: 'MT', platform: 0, offset: { vertical: -3, horizontal: -1 } },
-      { type: 'healer', tag: 'H1', platform: 0, offset: { vertical: 0, horizontal: -1 } },
-      { type: 'melee', tag: 'D1', platform: 0, offset: { vertical: -2, horizontal: -3 } },
-      { type: 'ranged', tag: 'D3', platform: 0, offset: { vertical: 3, horizontal: -1 } },
-      { type: 'dps', tag: 'D2', platform: 0, offset: { vertical: -3, horizontal: 1 } },
-      { type: 'magic', tag: 'D4', platform: 0, offset: { vertical: 3, horizontal: 2 } },
-      { type: 'tank', tag: 'ST', platform: 0, offset: { vertical: -2, horizontal: 3 } },
-      { type: 'healer', tag: 'H2', platform: 0, offset: { vertical: 0, horizontal: 1 } },
+      { type: 'tank', tag: 'MT', platform: 1, offset: { vertical: 0, horizontal: 1.3 } },
+      { type: 'healer', tag: 'H1', platform: 1, offset: { vertical: 0, horizontal: -1.3 } },
+      { type: 'melee', tag: 'D1', platform: 2, offset: { vertical: 0, horizontal: 1.3 } },
+      { type: 'ranged', tag: 'D3', platform: 2, offset: { vertical: 0, horizontal: -1.3 } },
+      { type: 'dps', tag: 'D2', platform: 3, offset: { vertical: 0, horizontal: -1.3 } },
+      { type: 'magic', tag: 'D4', platform: 3, offset: { vertical: 0, horizontal: 1.3 } },
+      { type: 'tank', tag: 'ST', platform: 4, offset: { vertical: 0, horizontal: -1.3 } },
+      { type: 'healer', tag: 'H2', platform: 4, offset: { vertical: 0, horizontal: 1.3 } },
     ]
 
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
-      role.scale.set(0.4)
+      role.scale.set(0.5)
 
       const pos = platform_to_coord(r.platform, r.offset, YmToPxLarge)
 
@@ -78,17 +80,17 @@ import StratBoard from '@/components/StratBoard.astro'
 
     c.addChild(container)
 
-    const circle = new Graphics()
-    circle.circle(0, 0, 400)
-    circle.fill({ color: 'white', alpha: 0 })
-    c.addChild(circle)
+    // const circle = new Graphics()
+    // circle.circle(0, 0, 360)
+    // circle.fill({ color: 'white', alpha: 0 })
+    // c.addChild(circle)
 
-    const mask = new Graphics()
-    mask.circle(0, 0, 400)
-    mask.fill({ color: 'white', alpha: 0 })
-    c.addChild(mask)
-    c.mask = mask
-    c.addChild(mask)
+    // const mask = new Graphics()
+    // mask.circle(0, 0, 360)
+    // mask.fill({ color: 'white', alpha: 0 })
+    // c.addChild(mask)
+    // c.mask = mask
+    // c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

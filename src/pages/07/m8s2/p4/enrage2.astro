@@ -64,7 +64,6 @@ import StratBoard from '@/components/StratBoard.astro'
     tower.scale.set(0.93)
     const towerPos = platform_to_coord(1)
     tower.position.set(towerPos.x * YmToPxLarge, towerPos.y * YmToPxLarge)
-    tower.blendMode = 'overlay'
     container.addChild(tower)
 
     const roleParams: {
