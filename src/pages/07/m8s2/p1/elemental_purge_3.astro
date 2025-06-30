@@ -43,7 +43,7 @@ import StratBoard from '@/components/StratBoard.astro'
     floor.scale.set(getScale() * 1.25)
     container.addChild(floor)
 
-    const aoe = AoE.createFan(34, 210, { colors: AOE_COLORS.tailwind.orange }).toSprite(app)
+    const aoe = AoE.createFan(33, 210, { colors: AOE_COLORS.tailwind.orange }).toSprite(app)
     aoe.rotation = degToRad(-198)
     container.addChild(aoe)
 
