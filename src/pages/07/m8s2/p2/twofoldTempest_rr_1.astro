@@ -1,0 +1,123 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M8S2">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+  import type { Coordinates, PolarAngleCoordinates } from '@/pixi/coordinates'
+  import type { WaymarkType } from '@/pixi/waymark'
+
+  import { create_chn_teke01h } from '@/pixi/channeling/chn_teke01h'
+  import { convertCoordinates, distance, getMidpoint, scaleCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import floor_img from '/assets/07/m8s2/floor_11@3x.png?url'
+
+  const name = 'twofoldTempest_rr_1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
+    const container = new Container()
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale() * 1.25)
+    container.addChild(floor)
+
+    const roleParams: {
+      type: RoleType
+      tag?: string
+      p: PolarAngleCoordinates
+    }[] = [
+      { type: 'tank', tag: 'MT', p: { r: 9.54 + 8, deg: 90 + 72 + 7 } },
+      { type: 'healer', tag: 'H1', p: { r: 9.54 + 8, deg: 90 + 72 - 7 } },
+      { type: 'melee', tag: 'D1', p: { r: 9.54 + 8, deg: 90 + 72 * 2 + 7 } },
+      { type: 'ranged', tag: 'D3', p: { r: 9.54 + 8, deg: 90 + 72 * 2 - 7 } },
+      { type: 'tank', tag: 'ST', p: { r: 9.54 + 8, deg: 90 - 72 + 7 } },
+      { type: 'healer', tag: 'H2', p: { r: 9.54 + 8, deg: 90 - 72 - 7 } },
+      { type: 'dps', tag: 'D2', p: { r: 9.54 + 8, deg: 90 - 72 * 2 + 7 } },
+      { type: 'magic', tag: 'D4', p: { r: 9.54 + 8, deg: 90 - 72 * 2 - 7 } },
+    ]
+
+    const pos1 = { x: 0, y: 0 }
+    const pos2 = convertCoordinates(roleParams[2].p, 'cartesian')
+    const chn = await create_chn_teke01h(distance(pos1, pos2) * 1.25, 1.5)
+    chn.position = scaleCoordinates(getMidpoint(pos1, pos2), 1.25 * YmToPx)
+    chn.rotation = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x)
+    container.addChild(chn)
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.5)
+
+      const pos = scaleCoordinates(convertCoordinates(r.p, 'cartesian'), 1.25 * YmToPx)
+
+      role.position.set(pos.x, pos.y)
+      container.addChild(role)
+    })
+
+    const numberParam: { type: string; p: Coordinates }[] = [
+      { type: 'One', p: { r: 29, deg: 90 + 72 } },
+      { type: 'Two', p: { r: 29, deg: 90 + 72 * 2 } },
+      { type: 'Three', p: { r: 29, deg: 90 + 72 * 3 } },
+      { type: 'Four', p: { r: 29, deg: 90 + 72 * 4 } },
+    ]
+    numberParam.forEach(async (r) => {
+      const pos = scaleCoordinates(convertCoordinates(r.p, 'cartesian'), 1.25)
+      const waymarks = await setWaymark(container, {
+        [r.type]: { X: pos.x, Z: pos.y },
+      })
+      const waymark = waymarks.get(r.type as WaymarkType)!
+      waymark.fgSprite!.scale.set(1)
+      waymark.bgSprite!.alpha = 0
+    })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.rect(-440, -440, 880, 666)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.rect(-440, -440, 880, 666)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
