@@ -44,10 +44,10 @@ import StratBoard from '@/components/StratBoard.astro'
 
     for (let i = 0; i < 4; i++) {
       const { tower, pillars } = await createTower(2, { r: 17.54, deg: -198 + i * 72 }, 1.25)
-      tower.scale.set(tower.scale.x * 1.5, tower.scale.y * 1.5)
+      tower.scale.set(tower.scale.x * 1.25, tower.scale.y * 1.25)
       container.addChild(tower)
       pillars.forEach((pillar) => {
-        pillar.scale.set(pillar.scale.x * 1.5, pillar.scale.y * 1.5)
+        pillar.scale.set(pillar.scale.x * 1.25, pillar.scale.y * 1.25)
         container.addChild(pillar)
       })
     }
@@ -58,19 +58,19 @@ import StratBoard from '@/components/StratBoard.astro'
       platform: number
       offset: { vertical: number; horizontal: number }
     }[] = [
-      { type: 'tank', tag: 'MT', platform: 1, offset: { vertical: 0, horizontal: 1.3 } },
-      { type: 'healer', tag: 'H1', platform: 1, offset: { vertical: 0, horizontal: -1.3 } },
-      { type: 'melee', tag: 'D1', platform: 2, offset: { vertical: 0, horizontal: 1.3 } },
-      { type: 'ranged', tag: 'D3', platform: 2, offset: { vertical: 0, horizontal: -1.3 } },
-      { type: 'dps', tag: 'D2', platform: 3, offset: { vertical: 0, horizontal: -1.3 } },
-      { type: 'magic', tag: 'D4', platform: 3, offset: { vertical: 0, horizontal: 1.3 } },
-      { type: 'tank', tag: 'ST', platform: 4, offset: { vertical: 0, horizontal: -1.3 } },
-      { type: 'healer', tag: 'H2', platform: 4, offset: { vertical: 0, horizontal: 1.3 } },
+      { type: 'tank', tag: 'MT', platform: 1, offset: { vertical: 0, horizontal: 1.1 } },
+      { type: 'healer', tag: 'H1', platform: 1, offset: { vertical: 0, horizontal: -1.1 } },
+      { type: 'melee', tag: 'D1', platform: 2, offset: { vertical: 0, horizontal: 1.1 } },
+      { type: 'ranged', tag: 'D3', platform: 2, offset: { vertical: 0, horizontal: -1.1 } },
+      { type: 'dps', tag: 'D2', platform: 3, offset: { vertical: 0, horizontal: -1.1 } },
+      { type: 'magic', tag: 'D4', platform: 3, offset: { vertical: 0, horizontal: 1.1 } },
+      { type: 'tank', tag: 'ST', platform: 4, offset: { vertical: 0, horizontal: -1.1 } },
+      { type: 'healer', tag: 'H2', platform: 4, offset: { vertical: 0, horizontal: 1.1 } },
     ]
 
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
-      role.scale.set(0.5)
+      role.scale.set(0.4)
 
       const pos = platform_to_coord(r.platform, r.offset, YmToPxLarge)
 
