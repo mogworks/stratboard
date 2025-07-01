@@ -13,90 +13,97 @@ import StratBoard from '@/components/StratBoard.astro'
   import { listenKeys } from 'nanostores'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import type { Coordinates } from '@/pixi/coordinates'
+  import type { RoleType } from '@/lib/role'
+  import type { PolarAngleCoordinates } from '@/pixi/coordinates'
 
   import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { create_chn_teke01h } from '@/pixi/channeling/chn_teke01h'
+  import { convertCoordinates, degToRad, distance, getMidpoint, scaleCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import floor_img from '/assets/07/m8s2/floor_4@3x.png?url'
+  import floor_img from '/assets/07/m8s2/floor_9@3x.png?url'
 
   const name = 'twofoldTempest_mech'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
     const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
-    const centerToNorth = 17.54 * Math.cos(Math.PI / 5) + 8
-    const centerToSouth = 17.54 + 8
-    const YmToPxLarge = YmToPx * 1.25
-    floor.anchor.set(0.5, centerToNorth / (centerToNorth + centerToSouth))
+    floor.anchor.set(0.5, 0.5)
     floor.scale.set(getScale() * 1.25)
     container.addChild(floor)
 
-    // rect aoe
-    const rectPos: { x: number; y: number } = {
-      x: 17.54 * Math.sin(Math.PI / 5) * YmToPxLarge,
-      y: -17.54 * Math.cos(Math.PI / 5) * YmToPxLarge,
-    }
-    const aoeRect = AoE.createRect(16 * 1.25, 40, {
+    const ray = AoE.createRay(16 * 1.25, 40, {
       colors: AOE_COLORS.tailwind.lime,
-      innerShadowOptions: { alpha: 0 },
     }).toSprite(app)
-    aoeRect.rotation = Math.PI / 5
-    aoeRect.position.set(rectPos.x, rectPos.y)
-    container.addChild(aoeRect)
+    ray.rotation = degToRad(-126)
+    container.addChild(ray)
 
-    // circle aoe
-    const circleParam: {
-      radiu: number
-      pos: Coordinates
+    const roleParams: {
+      type: RoleType
+      p: PolarAngleCoordinates
     }[] = [
-      {
-        radiu: 5 * 1.25,
-        pos: {
-          x: (17.54 + 7) * Math.sin((3 * Math.PI) / 5) * 1.25,
-          y: -(17.54 + 7) * Math.cos((3 * Math.PI) / 5) * 1.25,
-        },
-      },
-      {
-        radiu: 10 * 1.25,
-        pos: {
-          x: -(17.54 + 7) * Math.sin(Math.PI / 5) * 1.25,
-          y: -(17.54 + 7) * Math.cos(Math.PI / 5) * 1.25,
-        },
-      },
+      { type: 'any', p: { r: 17.54 + 7, deg: 90 - 72 } },
+      { type: 'any', p: { r: 17.54 - 7, deg: 90 - 72 * 3 } },
     ]
-    const aoeCircle = AoE.createCircles(
-      app,
-      circleParam.map((c) => ({
-        position: c.pos,
-        radius: c.radiu,
-      })),
-      3,
-      { colors: AOE_COLORS.tailwind.teal },
-    )
-    container.addChild(aoeCircle)
 
-    // 'masking' destroyed island
-    const maskParam: { w: number; h: number } = { w: app.screen.width, h: (17 * app.screen.height) / 24 }
-    const smallRect: { w: number; h: number } = { w: 18 * YmToPxLarge, h: 5 * YmToPxLarge }
-    const maskGraphic = new Graphics()
+    const aoeCircles = AoE.createCircles(app, [
+      {
+        position: { r: roleParams[0].p.r * 1.25, deg: roleParams[0].p.deg },
+        radius: 6 * 1.25,
+        options: {
+          colors: AOE_COLORS.tailwind.teal,
+        },
+      },
+      {
+        position: { r: roleParams[0].p.r * 1.25, deg: 90 - 72 * 2 },
+        radius: 10 * 1.25,
+        options: {
+          colors: AOE_COLORS.tailwind.green,
+        },
+      },
+    ])
+    container.addChild(aoeCircles)
 
-    maskGraphic.rect(0, 0, maskParam.w, maskParam.h)
-    maskGraphic.fill({ color: 'white' })
-    maskGraphic.rect(-smallRect.w / 2 + maskParam.w / 2, -smallRect.h + maskParam.h, smallRect.w, smallRect.h)
-    maskGraphic.fill({ color: 'black' })
+    const pos1 = { x: 0, y: 0 }
+    const pos2 = convertCoordinates(roleParams[0].p, 'cartesian')
+    const chn = await create_chn_teke01h(distance(pos1, pos2) * 1.25, 1.25)
+    chn.position = scaleCoordinates(getMidpoint(pos1, pos2), 1.25 * YmToPx)
+    chn.rotation = Math.atan2(pos2.y - pos1.y, pos2.x - pos1.x)
+    container.addChild(chn)
 
-    const rt = app.renderer.generateTexture(maskGraphic)
-    const maskSprite = new Sprite(rt)
-    container.mask = maskSprite
-    app.stage.addChild(maskSprite) // 注意：必须添加到舞台上
+    roleParams.forEach((r) => {
+      const role = new Role(r.type)
+      role.scale.set(0.5)
+
+      const pos = scaleCoordinates(convertCoordinates(r.p, 'cartesian'), 1.25 * YmToPx)
+
+      role.position.set(pos.x, pos.y)
+      container.addChild(role)
+    })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.circle(0, 0, 440)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.circle(0, 0, 440)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))

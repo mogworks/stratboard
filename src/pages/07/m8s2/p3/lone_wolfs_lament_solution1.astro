@@ -15,16 +15,16 @@ import StratBoard from '@/components/StratBoard.astro'
 
   import type { RoleType } from '@/lib/role'
 
+  import { create_chn_closer_0v } from '@/pixi/channeling/chn_closer_0v'
+  import { create_chn_leave_0v } from '@/pixi/channeling/chn_leave_0v'
+  import { distance, getMidpoint, scaleCoordinates } from '@/pixi/coordinates'
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
-  import { create_tether } from '@/pixi/tether'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import { platform_to_coord } from '../_utils.ts'
 
   import floor_img from '/assets/07/m8s2/floor_12@3x.png?url'
-  import close_tether_img from '/game/vfx/channeling/eff/chn_closer_0v@3x.png?url'
-  import far_tether_img from '/game/vfx/channeling/eff/chn_leave_0v@3x.png?url'
   import tower2_img from '/game/vfx/omen/eff/general_trap_o2x@3x.png?url'
   import tower3_img from '/game/vfx/omen/eff/general_trap_o3x@3x.png?url'
   import tower1_img from '/game/vfx/omen/eff/m0119_trap_01t@3x.png?url'
@@ -116,15 +116,17 @@ import StratBoard from '@/components/StratBoard.astro'
       { start: roleParams[5], end: roleParams[1], type: 1 },
     ]
 
-    const farTetherTexure = await Assets.load(far_tether_img)
-    const closeTetherTexure = await Assets.load(close_tether_img)
-    tetherParam.forEach((r) => {
+    tetherParam.forEach(async (r) => {
       const startPos = platform_to_coord(r.start.platform, r.start.offset, 1.25)
 
       const endPos = platform_to_coord(r.end.platform, r.end.offset, 1.25)
 
-      const chn = create_tether(startPos, endPos, r.type === 1 ? farTetherTexure : closeTetherTexure)
-
+      const chn =
+        r.type === 0
+          ? await create_chn_closer_0v(distance(startPos, endPos), 1.25, { x: -65, y: 0 })
+          : await create_chn_leave_0v(distance(startPos, endPos), 1.25, { x: -69, y: 0 })
+      chn.position = scaleCoordinates(getMidpoint(startPos, endPos), YmToPx)
+      chn.rotation = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x)
       container.addChild(chn)
     })
 
