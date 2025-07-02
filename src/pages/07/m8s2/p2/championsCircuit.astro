@@ -21,6 +21,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { addFangs } from '../_fangs'
 
   import floor_img from '/assets/07/m8s2/floor_2@3x.png?url'
+  import turn_left_img from '/game/vfx/lockon/eff/m0851_turnleft_c0g@3x.png?url'
 
   const name = 'championsCircuit'
 
@@ -105,6 +106,13 @@ import StratBoard from '@/components/StratBoard.astro'
         aoeColor: AOE_COLORS.tailwind.cyan,
       }),
     )
+
+    const turnLeftTexture = await Assets.load(turn_left_img)
+    const turnLeft = Sprite.from(turnLeftTexture)
+    turnLeft.anchor.set(0.5, 0.5)
+    turnLeft.scale.set(0.75)
+    turnLeft.position.set(0, 0)
+    container.addChild(turnLeft)
 
     c.addChild(container)
 
