@@ -97,7 +97,7 @@ import StratBoard from '@/components/StratBoard.astro'
       aoeContainer.rotation = degToRad(rotation)
     }
 
-    generateAoes(aoePos, 1.25, -72 * 2)
+    generateAoes(aoePos, 1.25, -72 * 4)
 
     // 浮游炮
     container.addChild(
@@ -105,7 +105,7 @@ import StratBoard from '@/components/StratBoard.astro'
         multiplefangs: true,
         activate: true,
         random: false,
-        patterns: [1, 0, 0, 1, 0],
+        patterns: [1, 0, 0, 1, 1],
         aoeColor: AOE_COLORS.tailwind.cyan,
       }),
     )
@@ -114,7 +114,7 @@ import StratBoard from '@/components/StratBoard.astro'
       type: RoleType
       tag?: string
       p: PolarAngleCoordinates
-    }[] = [{ type: 'any', p: { r: 9.54 + 13.5, deg: 82 } }]
+    }[] = [{ type: 'any', p: { r: 9.54 + 8, deg: 84 } }]
 
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
