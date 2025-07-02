@@ -190,7 +190,7 @@ export interface AoECreateOptions {
   outerGlowOptions?: Partial<GlowFilterOptions>
 }
 
-export type AoEType = 'rect' | 'ray' | 'circle' | 'ring' | 'fan' | 'x' | 'ringFan'
+export type AoEType = 'rect' | 'ray' | 'circle' | 'ring' | 'fan' | 'x' | 'ring_fan'
 
 export class AoETexture extends Texture {
   type: AoEType
@@ -203,7 +203,6 @@ export class AoETexture extends Texture {
   }
 
   getCenterPivot(metaData?: Record<string, any>) {
-    // TODO：ringFan 的中心点
     if (this.type === 'ray') {
       return new Point(YmToPx * this.resolution, this.height / 2)
     } else if (this.type === 'fan') {
@@ -214,6 +213,16 @@ export class AoETexture extends Texture {
         const radius = metaData?.radius ?? 0
         const radian = degToRad(angle / 2 - 90)
         return new Point((1 + radius * Math.sin(radian)) * YmToPx * this.resolution, this.height / 2)
+      }
+    } else if (this.type === 'ring_fan') {
+      const angle = (metaData?.angle ?? 0) % 360
+      const innerRadius = metaData?.innerRadius ?? 0
+      const outerRadius = metaData?.outerRadius ?? 0
+      if (angle <= 180) {
+        return new Point((1 - innerRadius * Math.cos(degToRad(angle / 2))) * YmToPx * this.resolution, this.height / 2)
+      } else {
+        const radian = degToRad(angle / 2 - 90)
+        return new Point((1 + outerRadius * Math.sin(radian)) * YmToPx * this.resolution, this.height / 2)
       }
     } else {
       return new Point(this.width / 2, this.height / 2)
@@ -535,20 +544,20 @@ export class AoE extends Container {
   }
 
   /**
-   * TODO：修正中心点（Pivot）
    * 创建扇环AoE效果
    */
   static createRingFan(innerRadius: number, outerRadius: number, angle: number, options: AoECreateOptions = {}): AoE {
     const { resolution = DEFAULT_AOE_RESOLUTION } = options
 
     const aoe = new AoE(
-      'ringFan',
+      'ring_fan',
       resolution,
       style => G.createRingFanGraphics(innerRadius, outerRadius, angle, style, resolution),
       options.colors,
       options.aoeAlpha,
       options.innerShadowOptions,
       options.outerGlowOptions,
+      { angle, innerRadius, outerRadius },
     )
     return aoe
   }
