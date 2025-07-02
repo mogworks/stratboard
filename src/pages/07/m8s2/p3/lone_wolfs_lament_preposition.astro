@@ -11,24 +11,31 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Sprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import type { RoleType } from '@/lib/role'
 
+  import { create_chn_closer_0v } from '@/pixi/channeling/chn_closer_0v'
+  import { create_chn_leave_0v } from '@/pixi/channeling/chn_leave_0v'
+  import { distance, getMidpoint, scaleCoordinates } from '@/pixi/coordinates'
   import { Role } from '@/pixi/role'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { $stratBoards } from '@/stores/stratBoards'
 
-  import floor_img from '/assets/07/m8s2/floor_12@3x.png?url'
+  import { platform_to_coord } from '../_utils.ts'
+
+  import floor_img from '/assets/07/m8s2/floor_14@3x.png?url'
 
   const name = 'lone_wolfs_lament_preposition'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
     const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
@@ -48,21 +55,55 @@ import StratBoard from '@/components/StratBoard.astro'
       { type: 'melee', tag: 'D1', platform: 4, offset: { vertical: 0, horizontal: 0 } },
       { type: 'ranged', tag: 'D3', platform: 4, offset: { vertical: 3, horizontal: -1 } },
       { type: 'dps', tag: 'D2', platform: 4, offset: { vertical: -1, horizontal: 2 } },
-      { type: 'magic', tag: 'D4', platform: 4, offset: { vertical: -2, horizontal: -2 } },
+      { type: 'magic', tag: 'D4', platform: 4, offset: { vertical: 1, horizontal: -2 } },
       { type: 'tank', tag: 'ST', platform: 2, offset: { vertical: 0, horizontal: 1 } },
       { type: 'healer', tag: 'H2', platform: 0, offset: { vertical: 0, horizontal: 1 } },
     ]
 
+    // 0 == close, 1 == far
+    const tetherParam = [
+      { start: roleParams[6], end: roleParams[4], type: 1 },
+      { start: roleParams[0], end: roleParams[2], type: 0 },
+      { start: roleParams[7], end: roleParams[3], type: 0 },
+      { start: roleParams[5], end: roleParams[1], type: 1 },
+    ]
+
+    for (const r of tetherParam) {
+      const startPos = platform_to_coord(r.start.platform, r.start.offset)
+
+      const endPos = platform_to_coord(r.end.platform, r.end.offset)
+
+      const d = distance(startPos, endPos)
+
+      const chn = r.type === 0 ? await create_chn_closer_0v(d, 1.25) : await create_chn_leave_0v(d, 1.25)
+      chn.position = scaleCoordinates(getMidpoint(startPos, endPos), YmToPxLarge)
+      chn.rotation = Math.atan2(endPos.y - startPos.y, endPos.x - startPos.x)
+      container.addChild(chn)
+    }
+
     roleParams.forEach((r) => {
-      const radian = (2 * r.platform * Math.PI) / 5
       const role = new Role(r.type, r.tag)
       role.scale.set(0.4)
-      role.position.set(
-        -17.54 * YmToPxLarge * Math.sin(radian) + r.offset.horizontal * YmToPxLarge,
-        17.54 * YmToPxLarge * Math.cos(radian) + r.offset.vertical * YmToPxLarge,
-      )
+
+      const pos = platform_to_coord(r.platform, r.offset, YmToPxLarge)
+
+      role.position.set(pos.x, pos.y)
       container.addChild(role)
     })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.rect(-314, -280, 628, 602)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.rect(-314, -280, 628, 602)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))
