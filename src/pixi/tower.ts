@@ -56,12 +56,12 @@ export async function createTower(type: keyof typeof towerImgMap, position: Coor
     const pillar1 = Sprite.from(pillarTexture)
     pillar1.anchor.set(0.5, 0.5)
     pillar1.scale.set(0.16 * scale)
-    pillar1.position = { x: p.x - 0.8 * YmToPx, y: p.y - 0.1 * YmToPx }
+    pillar1.position = { x: p.x - 1 * YmToPx, y: p.y - 0.1 * YmToPx }
     pillars.push(pillar1)
     const pillar2 = Sprite.from(pillarTexture)
     pillar2.anchor.set(0.5, 0.5)
     pillar2.scale.set(0.16 * scale)
-    pillar2.position = { x: p.x + 1 * YmToPx, y: p.y - 0.1 * YmToPx }
+    pillar2.position = { x: p.x + 1.2 * YmToPx, y: p.y - 0.1 * YmToPx }
     pillars.push(pillar2)
   } else {
     const pillar1 = Sprite.from(pillarTexture)
