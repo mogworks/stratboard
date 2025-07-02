@@ -25,9 +25,8 @@ import StratBoard from '@/components/StratBoard.astro'
   import { addFangs } from '../_fangs'
 
   import floor_img from '/assets/07/m8s2/floor_2@3x.png?url'
-  import turn_left_img from '/game/vfx/lockon/eff/m0851_turnleft_c0g@3x.png?url'
 
-  const name = 'championsCircuit'
+  const name = 'championsCircuit_3'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
@@ -98,31 +97,24 @@ import StratBoard from '@/components/StratBoard.astro'
       aoeContainer.rotation = degToRad(rotation)
     }
 
-    generateAoes(aoePos, 1.25, -72)
+    generateAoes(aoePos, 1.25, -72 * 3)
 
     // 浮游炮
     container.addChild(
       await addFangs(app, {
         multiplefangs: true,
-        activate: false,
+        activate: true,
         random: false,
-        patterns: [0, 1, 1, 0, 1],
+        patterns: [1, 1, 0, 1, 0],
         aoeColor: AOE_COLORS.tailwind.cyan,
       }),
     )
-
-    const turnLeftTexture = await Assets.load(turn_left_img)
-    const turnLeft = Sprite.from(turnLeftTexture)
-    turnLeft.anchor.set(0.5, 0.5)
-    turnLeft.scale.set(0.75)
-    turnLeft.position.set(0, 0)
-    container.addChild(turnLeft)
 
     const roleParams: {
       type: RoleType
       tag?: string
       p: PolarAngleCoordinates
-    }[] = [{ type: 'any', p: { r: 9.54 + 8, deg: 90 } }]
+    }[] = [{ type: 'any', p: { r: 9.54 + 4, deg: 80 } }]
 
     roleParams.forEach((r) => {
       const role = new Role(r.type, r.tag)
