@@ -14,7 +14,7 @@ import StratBoard from '@/components/StratBoard.astro'
   import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
   import { AoE, AOE_COLORS } from '@/pixi/aoe'
-  import { polarRadianToCartesian } from '@/pixi/coordinates'
+  import { degToRad, polarRadianToCartesian } from '@/pixi/coordinates'
   import { getScale, YmToPx } from '@/pixi/scale'
   import { $stratBoards } from '@/stores/stratBoards'
 
@@ -27,22 +27,22 @@ import StratBoard from '@/components/StratBoard.astro'
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
-    const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
 
-    const floorTexture = await Assets.load(floor_img)
-    const floor = Sprite.from(floorTexture)
-    const centerToNorth = 17.54 * Math.cos(Math.PI / 5) + 8
-    const centerToSouth = 17.54 + 8
-    const YmToPxLarge = YmToPx * 1.25
-    floor.anchor.set(0.5, centerToNorth / (centerToNorth + centerToSouth))
-    floor.scale.set(getScale() * 1.25)
-    container.addChild(floor)
+    const container = new Container()
 
     // Champion's Circuit
     const aoeContainer = new Container()
     container.addChild(aoeContainer)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    const YmToPxLarge = YmToPx * 1.25
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale() * 1.25)
+    aoeContainer.addChild(floor)
 
     const aoePos: { r: number; rad: number }[] = [
       { r: 17.54 * YmToPxLarge, rad: Math.PI / 10 },
@@ -52,15 +52,9 @@ import StratBoard from '@/components/StratBoard.astro'
       { r: 17.54 * YmToPxLarge, rad: (-3 * Math.PI) / 10 },
     ]
 
-    // function rotateArray<T>(arr: T[], offset: number = 1) {
-    //   const len = arr.length
-    //   const n = ((offset % len) + len) % len
-    //   return arr.slice(n).concat(arr.slice(0, n))
-    // }
-
-    function generateAoes(aoePos: { r: number; rad: number }[], scale: number = 1.25) {
+    function generateAoes(aoePos: { r: number; rad: number }[], scale: number = 1.25, rotation: number = 0) {
       // aoe ring
-      const aoeSmallRing = AoE.createRing(4.5 * scale, 13 * scale).toSprite(app)
+      const aoeSmallRing = AoE.createRing(4 * scale, 13 * scale).toSprite(app)
       const pos1 = polarRadianToCartesian(aoePos[0])
       aoeSmallRing.position.set(pos1.x, pos1.y)
       aoeContainer.addChild(aoeSmallRing)
@@ -88,46 +82,43 @@ import StratBoard from '@/components/StratBoard.astro'
       aoeContainer.addChild(aoeCircleFanMask)
 
       // aoe large ring fan * 2
-      const aoeRingFan1 = AoE.createRingFan(15 * scale, 26 * scale, 60).toSprite(app)
-      const pos3 = polarRadianToCartesian({ r: 20.5 * YmToPxLarge, rad: aoePos[2].rad })
-      aoeRingFan1.position.set(pos3.x, pos3.y)
+      const aoeRingFan1 = AoE.createRingFan(16 * scale, 28.4 * scale, 60).toSprite(app)
       aoeRingFan1.rotation = aoePos[2].rad
       aoeContainer.addChild(aoeRingFan1)
 
-      const aoeRingFan2 = AoE.createRingFan(15 * scale, 26 * scale, 60).toSprite(app)
-      const pos5 = polarRadianToCartesian({ r: 20.5 * YmToPxLarge, rad: aoePos[4].rad })
-      aoeRingFan2.position.set(pos5.x, pos5.y)
+      const aoeRingFan2 = AoE.createRingFan(16 * scale, 28.4 * scale, 60).toSprite(app)
       aoeRingFan2.rotation = aoePos[4].rad
       aoeContainer.addChild(aoeRingFan2)
+
+      aoeContainer.rotation = degToRad(rotation)
     }
+
+    generateAoes(aoePos, 1.25, -72)
 
     // 浮游炮
     container.addChild(
-      await addFangs(app, { multiplefangs: true, activate: true, random: true, aoeColor: AOE_COLORS.tailwind.emerald }),
+      await addFangs(app, {
+        multiplefangs: true,
+        activate: false,
+        random: false,
+        patterns: [0, 1, 1, 0, 1],
+        aoeColor: AOE_COLORS.tailwind.cyan,
+      }),
     )
 
-    generateAoes(aoePos)
-    // dynamic
-    // let elapsedMS = 0
-    // const interval = 4400
-    // let offset = 0
-    // app.ticker.add((ticker) => {
-    //   elapsedMS += ticker.elapsedMS
+    c.addChild(container)
 
-    //   if (elapsedMS >= interval / 2) {
-    //     aoeContainer.removeChildren().forEach((child) => {
-    //       child.destroy({ children: true, texture: true })
-    //     })
-    //   }
+    const circle = new Graphics()
+    circle.circle(0, 0, 400)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
 
-    //   if (elapsedMS >= interval) {
-    //     elapsedMS = 0
-    //     offset += 1 // 顺时针
-
-    //     const pos = rotateArray(aoePos, offset)
-    //     generateAoes(pos)
-    //   }
-    // })
+    const mask = new Graphics()
+    mask.circle(0, 0, 400)
+    mask.fill({ color: 'white', alpha: 1 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))
