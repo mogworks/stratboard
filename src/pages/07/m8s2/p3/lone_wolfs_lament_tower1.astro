@@ -11,68 +11,56 @@ import StratBoard from '@/components/StratBoard.astro'
 
 <script>
   import { listenKeys } from 'nanostores'
-  import { Assets, Container, Sprite } from 'pixi.js'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
 
-  import { getScale, YmToPx } from '@/pixi/scale'
+  import { getScale } from '@/pixi/scale'
+  import { createTower } from '@/pixi/tower'
   import { $stratBoards } from '@/stores/stratBoards'
 
   import floor_img from '/assets/07/m8s2/floor_12@3x.png?url'
-  import tower2_img from '/game/vfx/omen/eff/general_trap_o2x@3x.png?url'
-  import tower3_img from '/game/vfx/omen/eff/general_trap_o3x@3x.png?url'
-  import tower1_img from '/game/vfx/omen/eff/m0119_trap_01t@3x.png?url'
 
-  const name = 'elemental_purge_tower1'
+  const name = 'lone_wolfs_lament_tower1'
 
   listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
     const app = stratBoards.stratboard
 
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
     const container = new Container()
-    container.position.set(app.screen.width / 2, app.screen.height / 2)
-    app.stage.addChild(container)
 
     const floorTexture = await Assets.load(floor_img)
     const floor = Sprite.from(floorTexture)
-    const YmToPxLarge = YmToPx * 1.25
     floor.anchor.set(0.5, 0.5)
     floor.scale.set(getScale() * 1.25)
     container.addChild(floor)
 
-    // 造塔
-    // 1 = 单人塔
-    // 2 = 双人塔
-    // 3 = 三人塔
-    const tower1Texture = await Assets.load(tower1_img)
-    const tower2Texture = await Assets.load(tower2_img)
-    const tower3Texture = await Assets.load(tower3_img)
-    const towerPositions = [
-      { platform: 0, type: 3 },
-      { platform: 1, type: 1 },
-      { platform: 2, type: 1 },
-      { platform: 3, type: 2 },
-      { platform: 4, type: 1 },
-    ]
+    const types = [3, 1, 1, 2, 1] as const
 
-    towerPositions.forEach((p) => {
-      const radian = (2 * p.platform * Math.PI) / 5
-      const tower = (function () {
-        switch (p.type) {
-          case 1:
-            return Sprite.from(tower1Texture)
-          case 2:
-            return Sprite.from(tower2Texture)
-          case 3:
-            return Sprite.from(tower3Texture)
-          default:
-            return Sprite.from(tower1Texture)
-        }
-      })()
-
-      tower.anchor.set(0.5, 0.5)
-      tower.scale.set(0.35)
-      tower.position.set(-17.54 * YmToPxLarge * Math.sin(radian), 17.54 * YmToPxLarge * Math.cos(radian))
-      tower.blendMode = 'overlay'
+    for (let i = 0; i < 5; i++) {
+      const { tower, pillars } = await createTower(types[i], { r: 17.54, deg: 90 + i * 72 }, 1.25)
+      tower.scale.set(tower.scale.x * 1.25, tower.scale.y * 1.25)
       container.addChild(tower)
-    })
+      pillars.forEach((pillar) => {
+        pillar.scale.set(pillar.scale.x * 1.25, pillar.scale.y * 1.25)
+        container.addChild(pillar)
+      })
+    }
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.rect(-314, -280, 628, 602)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.rect(-314, -280, 628, 602)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
 
     // take screenshot
     await new Promise((resolve) => setTimeout(resolve, 1000))
