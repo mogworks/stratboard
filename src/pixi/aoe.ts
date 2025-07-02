@@ -562,6 +562,33 @@ export class AoE extends Container {
     return aoe
   }
 
+  /**
+   * 批量创建扇环AoE效果
+   */
+  static createRingFans(
+    app: Application,
+    params: { alpha?: number; position?: Coordinates; rotation?: number; innerRadius?: number; outerRadius?: number; angle?: number; options?: AoECreateOptions }[],
+      defaultInnerRadius: number = 0,
+      defaultOuterRadius: number = 0,
+      defaultAngle: number = 0,
+      defaultOptions: AoECreateOptions = {},
+  ) {
+    const c = new Container()
+    params.forEach((param) => {
+      const ringFan = AoE.createRingFan(
+        param.innerRadius ?? defaultInnerRadius,
+        param.outerRadius ?? defaultOuterRadius,
+        param.angle ?? defaultAngle,
+        param.options ?? defaultOptions,
+      ).toSprite(app)
+      ringFan.alpha = param.alpha ?? 1
+      ringFan.position = convertCoordinates(scaleCoordinates(param.position ?? { x: 0, y: 0 }, YmToPx), 'cartesian')
+      ringFan.rotation = degToRad(param.rotation ?? 0)
+      c.addChild(ringFan)
+    })
+    return c
+  }
+
   private getComputedRectangle() {
     const bounds = this.getLocalBounds()
     const rect = new Rectangle(
