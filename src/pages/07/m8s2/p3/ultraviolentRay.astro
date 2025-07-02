@@ -1,0 +1,118 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="M8S2">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+  import type { PolarRadianCoordinates } from '@/pixi/coordinates'
+
+  import { convertCoordinates, degToRad } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { addFangs } from '../_fangs'
+
+  import floor_img from '/assets/07/m8s2/floor_2@3x.png?url'
+
+  const name = 'ultraviolentRay'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
+    const container = new Container()
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    const radianSW = (2 * 2 * Math.PI) / 5
+    const radianSE = -(2 * 0 * Math.PI) / 5
+    const radius = 17.54
+    const YmToPxLarge = YmToPx * 1.25
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale() * 1.25)
+    container.addChild(floor)
+
+    const roleParams: { type: RoleType; tag: string; p: PolarRadianCoordinates }[] = [
+      { type: 'healer', tag: 'H1', p: { r: radius, rad: radianSW } },
+      { type: 'tank', tag: 'ST', p: { r: radius, rad: radianSE + 0 } },
+      { type: 'ranged', tag: 'D3', p: { r: radius, rad: radianSW + 0.2 } },
+      { type: 'dps', tag: 'D2', p: { r: radius, rad: radianSE + 0.2 } },
+      { type: 'melee', tag: 'D1', p: { r: radius, rad: radianSW + 0.4 } },
+      { type: 'magic', tag: 'D4', p: { r: radius, rad: radianSE + 0.4 } },
+      { type: 'tank', tag: 'MT', p: { r: radius, rad: radianSW + 0.6 } },
+      { type: 'healer', tag: 'H2', p: { r: radius, rad: radianSE + 0.6 } },
+    ]
+
+    // const roleParams: { type: RoleType; tag: string, x: number; y: number}[] = [
+    //   { type: 'healer', tag: 'H1', x: -17.54 * Math.sin(radianSW) + 5, y: 17.54 * Math.cos(radianSW) + 1},
+    //   { type: 'healer', tag: 'H2', x: -17.54 * Math.sin(radianSE) - 5, y: 17.54 * Math.cos(radianSE) + 1},
+    //   { type: 'ranged', tag: 'D3', x: -17.54 * Math.sin(radianSW) + 3, y: 17.54 * Math.cos(radianSW) + 1},
+    //   { type: 'magic', tag: 'D4', x: -17.54 * Math.sin(radianSE) - 3, y: 17.54 * Math.cos(radianSE) + 1},
+    //   { type: 'melee', tag: 'D1', x: -17.54 * Math.sin(radianSW) + 3, y: 17.54 * Math.cos(radianSW) - 2},
+    //   { type: 'dps', tag: 'D2', x: -17.54 * Math.sin(radianSE) - 3, y: 17.54 * Math.cos(radianSE) - 2},
+    //   { type: 'tank', tag: 'MT', x: -17.54 * Math.sin(radianSW) + 5, y: 17.54 * Math.cos(radianSW) - 2},
+    //   { type: 'tank', tag: 'ST', x: -17.54 * Math.sin(radianSE) - 5, y: 17.54 * Math.cos(radianSE) - 2},
+    // ]
+
+    // const skywardLeapParams: {x: number, y: number}[] = [
+    //   {x: -17.54 * Math.sin(radianSE) - 3, y: 17.54 * Math.cos(radianSE) - 2},
+    //   {x: -17.54 * Math.sin(radianSE) - 3, y: 17.54 * Math.cos(radianSE) - 2}
+    // ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      const p = convertCoordinates(r.p, 'cartesian')
+      role.scale.set(0.5)
+      role.position.set(p.x * YmToPxLarge, p.y * YmToPxLarge)
+      role.rotation = degToRad(72)
+      container.addChild(role)
+    })
+
+    container.addChild(await addFangs(app, { activate: false, patterns: [0, 1, 0, 1, 1] }))
+
+    container.rotation = degToRad(-72)
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.circle(0, 0, 340)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.circle(0, 0, 340)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>

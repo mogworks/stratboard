@@ -1,0 +1,148 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+//月环+左半场刀
+---
+
+<Layout title="M8S2">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+
+  import { AoE, AOE_COLORS } from '@/pixi/aoe'
+  import { convertCoordinates, degToRad } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { platform_to_coord } from '../_utils'
+
+  import active_fang from '/assets/07/m8s1/adds/gleaming_fang_2.png?url'
+  import floor_img from '/assets/07/m8s2/floor_13@3x.png?url'
+
+  const name = 'herosBlow1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const c = new Container()
+    c.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(c)
+
+    const container = new Container()
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    const YmToPxLarge = YmToPx * 1.25
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale() * 1.25)
+    container.addChild(floor)
+
+    // 半场刀
+    const fan = AoE.createFan(33, 180, { colors: AOE_COLORS.tailwind.orange }).toSprite(app)
+    // fan.anchor.set(0.5, centerToNorth / (centerToNorth + centerToSouth))
+    fan.rotation = degToRad(-72)
+    fan.alpha = 0.75
+
+    // 可选mask如果会更好看的话
+    // const mask = new Graphics()
+    // for (let i = 0; i < 5; i++) {
+    //   const r = (2 * i * Math.PI) / 5
+    //   mask.circle(-17.54 * YmToPxLarge * Math.sin(r), 17.54 * YmToPxLarge * Math.cos(r), 8 * YmToPxLarge)
+    // }
+    // mask.fill({ color: 'white' })
+    // fan.mask = mask
+    // container.addChild(mask)
+
+    container.addChild(fan)
+
+    // 浮游炮
+    // 此处内环安全区15.4是预估值
+    const innerCircle = 15.4
+    const fangs = new Container()
+    for (let i = 0; i < 5; i++) {
+      const radian = (2 * i * Math.PI) / 5 - 0.6
+      const activeFangTexture = await Assets.load(active_fang)
+      const fang = Sprite.from(activeFangTexture)
+      fang.anchor.set(0.5, 0.5)
+      fang.scale.set(0.025)
+
+      // fang.angle = Math.atan2(p.y - 0, p.x - 0) * (180 / Math.PI) - 90
+      fang.angle = (radian + 0.32) * (180 / Math.PI) + 90
+
+      const p_adjust = convertCoordinates({ r: 22, rad: radian + 0.32 + (-1) ** i * 0.0 }, 'cartesian')
+      const angle = Math.atan2(p_adjust.y - 0, p_adjust.x - 0)
+      fang.position.set(
+        (p_adjust.x - (-1) ** i * Math.sin(angle)) * YmToPxLarge,
+        (p_adjust.y - (-1) ** (i + 1) * Math.cos(angle)) * YmToPxLarge,
+      )
+
+      fangs.addChild(fang)
+    }
+
+    container.addChild(AoE.createRing(innerCircle * 1.25, 33).toSprite(app))
+    container.addChild(fangs)
+
+    const roleParams: {
+      type: RoleType
+      tag: string
+      platform: number
+      offset: { vertical: number; horizontal: number }
+    }[] = [
+      { type: 'tank', tag: 'MT', platform: 2, offset: { vertical: 0, horizontal: -1.2 } },
+      { type: 'melee', tag: 'D1', platform: 2, offset: { vertical: 0, horizontal: 1.2 } },
+      { type: 'ranged', tag: 'D3', platform: 0, offset: { vertical: 1.4, horizontal: 0 } },
+      { type: 'healer', tag: 'H1', platform: 0, offset: { vertical: -1, horizontal: -1.2 } },
+      { type: 'dps', tag: 'D2', platform: 4, offset: { vertical: 0, horizontal: 1 } },
+      { type: 'magic', tag: 'D4', platform: 3, offset: { vertical: -1, horizontal: 0.5 } },
+      { type: 'tank', tag: 'ST', platform: 1, offset: { vertical: 0, horizontal: -1 } },
+      { type: 'healer', tag: 'H2', platform: 0, offset: { vertical: -1, horizontal: 1.2 } },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.4)
+
+      const pos = platform_to_coord(r.platform, r.offset, YmToPxLarge)
+
+      role.position.set(pos.x, pos.y)
+      container.addChild(role)
+    })
+
+    c.addChild(container)
+
+    const circle = new Graphics()
+    circle.circle(0, 0, 340)
+    circle.fill({ color: 'white', alpha: 0 })
+    c.addChild(circle)
+
+    const mask = new Graphics()
+    mask.circle(0, 0, 340)
+    mask.fill({ color: 'white', alpha: 0 })
+    c.addChild(mask)
+    c.mask = mask
+    c.addChild(mask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 4
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
