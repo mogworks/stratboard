@@ -153,6 +153,11 @@ export const AOE_PRESET = {
     aoeAlpha: 0.1,
     innerShadowOptions: { alpha: 0.4 },
   },
+  style_5: { // 暗紫色
+    colors: { aoe: '#1f0237', outerGlow: '#ba08ff', innerShadow: '#2b0444' },
+    aoeAlpha: 0.4,
+    innerShadowOptions: { alpha: 0.75 },
+  },
   lockon_circle_aoe_1: { // 模仿淡黄圈点名
     colors: { aoe: '#feca9b', outerGlow: '#feca9b', innerShadow: '#4b3f2f' },
     aoeAlpha: 0.12,
