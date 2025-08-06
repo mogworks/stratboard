@@ -1,0 +1,144 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="Necron">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" class="scale-200" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { CombinedRoleType } from '@/lib/role'
+
+  import { AoE, AOE_PRESET } from '@/pixi/aoe'
+  import { convertCoordinates, scaleCoordinates } from '@/pixi/coordinates'
+  import { createRoleIcon } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from './_waymark'
+
+  import floor_img from '/assets/07/necron/floor@3x.png?url'
+  import target_circle_img from '/assets/target_circle/r16@3x.png?url'
+  import pillar_img from '/assets/tower/pillar@3x.png?url'
+  import tower_img from '/game/vfx/omen/eff/m0119_trap_01t@3x.png?url'
+
+  const name = 'GrandCross_solution_1'
+  const ratio = 1.5
+  const YmToPxScaled = YmToPx * ratio
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale() * ratio)
+    container.addChild(floor)
+
+    const target_circle_texture = await Assets.load(target_circle_img)
+    const target_circle = Sprite.from(target_circle_texture)
+    target_circle.position.set(0, -17 * YmToPxScaled)
+    target_circle.scale.set(ratio)
+    target_circle.anchor.set(0.5, 0.5)
+    target_circle.rotation = Math.PI
+    container.addChild(target_circle)
+
+    const waymarks = await setWaymark(container, waymarkData, 0.75)
+    waymarks.forEach((waymark) => {
+      waymark.position.set(waymark.position.x * ratio, waymark.position.y * ratio)
+    })
+
+    const roleParams: { type: CombinedRoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank|dps', tag: 'MT/D1', x: 0, y: -6 },
+      { type: 'dps|tank', tag: 'D1/MT', x: -4.5 * Math.SQRT1_2, y: -4.5 * Math.SQRT1_2 },
+      { type: 'healer|dps', tag: 'H1/D3', x: -6, y: 0 },
+      { type: 'dps|healer', tag: 'D3/H1', x: -4.5 * Math.SQRT1_2, y: 4.5 * Math.SQRT1_2 },
+      { type: 'tank|dps', tag: 'ST/D2', x: 6, y: 0 },
+      { type: 'dps|tank', tag: 'D2/ST', x: 4.5 * Math.SQRT1_2, y: -4.5 * Math.SQRT1_2 },
+      { type: 'healer|dps', tag: 'H2/D4', x: 0, y: 6 },
+      { type: 'dps|healer', tag: 'D4/H2', x: 4.5 * Math.SQRT1_2, y: 4.5 * Math.SQRT1_2 },
+    ]
+
+    const offset = 45
+    const towerTexture = await Assets.load(tower_img)
+    const pillarTexture = await Assets.load(pillar_img)
+    const towerPositions = [
+      { r: 4.5, deg: 0 + offset },
+      { r: 4.5, deg: 90 + offset },
+      { r: 4.5, deg: 180 + offset },
+      { r: 4.5, deg: 270 + offset },
+    ]
+    for (const towerPosition of towerPositions) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPxScaled)
+      const tower = Sprite.from(towerTexture)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78) * ratio * 1.25)
+      tower.position = position
+      tower.blendMode = 'screen-npm'
+      container.addChild(tower)
+
+      const pillar = Sprite.from(pillarTexture)
+      pillar.anchor.set(0.5, 0.5)
+      pillar.scale.set(0.16 * ratio)
+      pillar.position = { x: position.x + 0.1 * YmToPxScaled, y: position.y - 0.7 * YmToPxScaled }
+      container.addChild(pillar)
+    }
+
+    const circleAoe = AoE.createCircles(
+      app,
+      [
+        { position: { x: roleParams[0].x * ratio, y: roleParams[0].y * ratio } },
+        // { position: { x: roleParams[1].x * ratio, y: roleParams[1].y * ratio } },
+        { position: { x: roleParams[2].x * ratio, y: roleParams[2].y * ratio } },
+        // { position: { x: roleParams[3].x * ratio, y: roleParams[3].y * ratio } },
+        { position: { x: roleParams[4].x * ratio, y: roleParams[4].y * ratio } },
+        // { position: { x: roleParams[5].x * ratio, y: roleParams[5].y * ratio } },
+        { position: { x: roleParams[6].x * ratio, y: roleParams[6].y * ratio } },
+        // { position: { x: roleParams[7].x * ratio, y: roleParams[7].y * ratio } },
+      ],
+      2.5 * ratio,
+      { ...AOE_PRESET.lockon_circle_aoe_1, resolution: 3 },
+    )
+    container.addChild(circleAoe)
+
+    roleParams.forEach((r) => {
+      const role = createRoleIcon(r.type, r.tag)
+      role.scale.set(0.32)
+      role.position.set(r.x * YmToPxScaled, r.y * YmToPxScaled)
+      container.addChild(role)
+    })
+
+    const circleMask = new Graphics()
+    const circleRadius = 7.5 * YmToPxScaled
+    circleMask.circle(0, 0, circleRadius)
+    circleMask.fill({ color: 'white' })
+    container.mask = circleMask
+    container.addChild(circleMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
