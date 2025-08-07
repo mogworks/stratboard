@@ -158,6 +158,11 @@ export const AOE_PRESET = {
     aoeAlpha: 0.4,
     innerShadowOptions: { alpha: 0.75 },
   },
+  style_6: { // 死刑大红
+    colors: { aoe: '#a20a13', outerGlow: '#ff0402', innerShadow: '#ff0402' },
+    aoeAlpha: 0.24,
+    innerShadowOptions: { alpha: 0.24 },
+  },
   lockon_circle_aoe_1: { // 模仿淡黄圈点名
     colors: { aoe: '#feca9b', outerGlow: '#feca9b', innerShadow: '#4b3f2f' },
     aoeAlpha: 0.12,

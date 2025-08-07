@@ -1,0 +1,146 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="Necron">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" class="scale-200" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+
+  import { convertCoordinates, scaleCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from './_waymark'
+
+  import floor_img from '/assets/07/necron/floor@3x.png?url'
+  import target_circle_img from '/assets/target_circle/r16@3x.png?url'
+  import tower_img_2 from '/game/vfx/omen/eff/general_trap_o2x@3x.png?url'
+  import tower_img_3 from '/game/vfx/omen/eff/general_trap_o3x@3x.png?url'
+  import tower_img_4 from '/game/vfx/omen/eff/general_trap_o4x@3x.png?url'
+
+  const name = 'MassMacabre_solution_1'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const target_circle_texture = await Assets.load(target_circle_img)
+    const target_circle = Sprite.from(target_circle_texture)
+    target_circle.position.set(0, -17 * YmToPx)
+    target_circle.anchor.set(0.5, 0.5)
+    target_circle.rotation = Math.PI
+    container.addChild(target_circle)
+
+    await setWaymark(container, waymarkData, 0.75)
+
+    const towerTexture2 = await Assets.load(tower_img_2)
+    const towerPositions2 = [
+      { x: -12.5, y: -2.5 },
+      { x: -12.5, y: 2.5 },
+      { x: 12.5, y: -2.5 },
+      { x: 12.5, y: 2.5 },
+    ]
+    for (const towerPosition of towerPositions2) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPx)
+      const tower = Sprite.from(towerTexture2)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78) * 1.25)
+      tower.position = position
+      tower.blendMode = 'screen-npm'
+      container.addChild(tower)
+    }
+
+    const towerTexture3 = await Assets.load(tower_img_3)
+    const towerPositions3 = [
+      { x: -7.5, y: -10 },
+      { x: 7.5, y: -10 },
+      { x: -7.5, y: 10 },
+      { x: 7.5, y: 10 },
+    ]
+    for (const towerPosition of towerPositions3) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPx)
+      const tower = Sprite.from(towerTexture3)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78) * 1.25)
+      tower.position = position
+      tower.blendMode = 'screen-npm'
+      container.addChild(tower)
+    }
+
+    const towerTexture4 = await Assets.load(tower_img_4)
+    const towerPositions4 = [
+      { x: 0, y: -5 },
+      { x: 0, y: 5 },
+    ]
+    for (const towerPosition of towerPositions4) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPx)
+      const tower = Sprite.from(towerTexture4)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78) * 1.25)
+      tower.position = position
+      tower.blendMode = 'screen-npm'
+      container.addChild(tower)
+    }
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'MT', x: 0 - 1, y: -5 - 1 },
+      { type: 'tank', tag: 'ST', x: 0 + 1, y: -5 - 1 },
+      { type: 'melee', tag: 'D1', x: 0 - 1, y: -5 + 1 },
+      { type: 'dps', tag: 'D2', x: 0 + 1, y: -5 + 1 },
+      { type: 'healer', tag: 'H1', x: 0 - 1, y: 5 - 1 },
+      { type: 'healer', tag: 'H2', x: 0 + 1, y: 5 - 1 },
+      { type: 'ranged', tag: 'D3', x: 0 - 1, y: 5 + 1 },
+      { type: 'magic', tag: 'D4', x: 0 + 1, y: 5 + 1 },
+    ]
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.25)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    const squareMask = new Graphics()
+    const width = 30 * YmToPx // 46.4
+    const height = 25 * YmToPx
+    squareMask.rect(-width / 2, -height / 2, width, height)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
