@@ -1,0 +1,132 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import StratBoard from '@/components/StratBoard.astro'
+---
+
+<Layout title="Necron">
+  <div class="flex h-screen w-screen items-center justify-center">
+    <StratBoard key="stratboard" class="scale-200" />
+  </div>
+</Layout>
+
+<script>
+  import { listenKeys } from 'nanostores'
+  import { Assets, Container, Graphics, Sprite } from 'pixi.js'
+
+  import type { RoleType } from '@/lib/role'
+
+  import { AoE, AOE_PRESET } from '@/pixi/aoe'
+  import { convertCoordinates, radToDeg, scaleCoordinates } from '@/pixi/coordinates'
+  import { Role } from '@/pixi/role'
+  import { getScale, YmToPx } from '@/pixi/scale'
+  import { setWaymark } from '@/pixi/waymark'
+  import { $stratBoards } from '@/stores/stratBoards'
+
+  import { waymarkData } from './_waymark'
+
+  import floor_img from '/assets/07/necron/floor@3x.png?url'
+  import target_circle_img from '/assets/target_circle/r16@3x.png?url'
+  import tower_img_3 from '/game/vfx/omen/eff/general_trap_o3x@3x.png?url'
+
+  const name = 'MassMacabre_solution_op_3'
+
+  listenKeys($stratBoards, ['stratboard'], async (stratBoards) => {
+    const app = stratBoards.stratboard
+
+    const container = new Container()
+    container.position.set(app.screen.width / 2, app.screen.height / 2)
+    app.stage.addChild(container)
+
+    const floorTexture = await Assets.load(floor_img)
+    const floor = Sprite.from(floorTexture)
+    floor.anchor.set(0.5, 0.5)
+    floor.scale.set(getScale())
+    container.addChild(floor)
+
+    const target_circle_texture = await Assets.load(target_circle_img)
+    const target_circle = Sprite.from(target_circle_texture)
+    target_circle.position.set(0, -17 * YmToPx)
+    target_circle.anchor.set(0.5, 0.5)
+    target_circle.rotation = Math.PI
+    container.addChild(target_circle)
+
+    const dangerArea = AoE.createRects(app, [{ width: 10, height: 25, options: AOE_PRESET.style_5 }])
+    container.addChild(dangerArea)
+
+    await setWaymark(container, waymarkData, 0.75)
+
+    const towerTexture3 = await Assets.load(tower_img_3)
+    const towerPositions3 = [
+      { x: -7.5, y: -10 },
+      { x: 7.5, y: -10 },
+      { x: -7.5, y: 10 },
+      { x: 7.5, y: 10 },
+    ]
+    for (const towerPosition of towerPositions3) {
+      const position = scaleCoordinates(convertCoordinates(towerPosition, 'cartesian'), YmToPx)
+      const tower = Sprite.from(towerTexture3)
+      tower.anchor.set(0.5, 0.5)
+      tower.scale.set(getScale(20, 0.78) * 1.25)
+      tower.position = position
+      tower.blendMode = 'screen-npm'
+      container.addChild(tower)
+    }
+
+    const roleParams: { type: RoleType; tag: string; x: number; y: number }[] = [
+      { type: 'tank', tag: 'MT', x: -14.25, y: -11.75 },
+      { type: 'healer', tag: 'H1', x: -7.5, y: 10 - 1 },
+      { type: 'ranged', tag: 'D3', x: -7.5 - 1, y: 10 + 1 },
+      { type: 'magic', tag: 'D4', x: -7.5 + 1, y: 10 + 1 },
+      { type: 'tank', tag: 'ST', x: 14.25, y: -11.75 },
+      { type: 'healer', tag: 'H2', x: 7.5, y: -10 - 1 },
+      { type: 'melee', tag: 'D1', x: 7.5 - 1, y: -10 + 1 },
+      { type: 'dps', tag: 'D2', x: 7.5 + 1, y: -10 + 1 },
+    ]
+
+    const bossPosition = { x: 0, y: -17 }
+    const radian = Math.atan2(bossPosition.y - roleParams[0].y, bossPosition.x - roleParams[0].x) + Math.PI
+    const aoe = AoE.createFans(
+      app,
+      [
+        {
+          position: bossPosition,
+          rotation: radToDeg(radian),
+          options: AOE_PRESET.style_6,
+        },
+      ],
+      40,
+      100,
+    )
+    container.addChild(aoe)
+
+    roleParams.forEach((r) => {
+      const role = new Role(r.type, r.tag)
+      role.scale.set(0.25)
+      role.position.set(r.x * YmToPx, r.y * YmToPx)
+      container.addChild(role)
+    })
+
+    const squareMask = new Graphics()
+    const width = 30 * YmToPx // 46.4
+    const height = 25 * YmToPx
+    squareMask.rect(-width / 2, -height / 2, width, height)
+    squareMask.fill({ color: 'white' })
+    container.mask = squareMask
+    container.addChild(squareMask)
+
+    // take screenshot
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const url = await app.renderer.extract.base64(app.stage)
+    const screenshot = document.createElement('a')
+    document.body.append(screenshot)
+    screenshot.style.position = 'fixed'
+    screenshot.style.top = '20px'
+    screenshot.style.right = '20px'
+    screenshot.download = name
+    screenshot.href = url
+    const image = new Image()
+    image.width = app.screen.width / 8
+    image.src = url
+    screenshot.innerHTML = image.outerHTML
+  })
+</script>
