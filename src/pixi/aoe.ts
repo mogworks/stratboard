@@ -534,9 +534,9 @@ export class AoE extends Container {
   static createXs(
     app: Application,
     params: { alpha?: number; position?: Coordinates; rotation?: number; width?: number; length?: number; options?: AoECreateOptions }[],
-      defaultWidth: number = 0,
-      defaultLength: number = 0,
-      defaultOptions: AoECreateOptions = {},
+    defaultWidth: number = 0,
+    defaultLength: number = 0,
+    defaultOptions: AoECreateOptions = {},
   ) {
     const c = new Container()
     params.forEach((param) => {
@@ -578,10 +578,10 @@ export class AoE extends Container {
   static createRingFans(
     app: Application,
     params: { alpha?: number; position?: Coordinates; rotation?: number; innerRadius?: number; outerRadius?: number; angle?: number; options?: AoECreateOptions }[],
-      defaultInnerRadius: number = 0,
-      defaultOuterRadius: number = 0,
-      defaultAngle: number = 0,
-      defaultOptions: AoECreateOptions = {},
+    defaultInnerRadius: number = 0,
+    defaultOuterRadius: number = 0,
+    defaultAngle: number = 0,
+    defaultOptions: AoECreateOptions = {},
   ) {
     const c = new Container()
     params.forEach((param) => {
