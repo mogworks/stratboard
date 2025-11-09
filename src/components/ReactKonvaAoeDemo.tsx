@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Layer, Ring, Shape, Stage } from 'react-konva'
 
 import { AoeEffect, STROKE_WIDTH } from './AoeEffect'
+import AoeRect from './AoeRect'
 
 export default function ReactKonvaAoeDemo() {
   const [center] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
@@ -9,6 +10,12 @@ export default function ReactKonvaAoeDemo() {
   return (
     <Stage width={window.innerWidth} height={window.innerHeight}>
       <Layer>
+        <AoeRect
+          x={center.x - 180}
+          y={center.y + 30}
+          width={360}
+          height={260}
+        />
         <AoeEffect>
           <Ring
             x={center.x}

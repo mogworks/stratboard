@@ -1,3 +1,5 @@
+import type { ShapeConfig } from 'konva/lib/Shape'
+
 import Konva from 'konva'
 import React, { useEffect, useRef } from 'react'
 import { Group } from 'react-konva'
@@ -19,7 +21,7 @@ type ReactKonvaShapeCtor =
   | ReactKonvaExports['Wedge']
   | ReactKonvaExports['Shape']
 
-type ReactKonvaShapeElement = React.ReactElement<any, ReactKonvaShapeCtor>
+type ReactKonvaShapeElement = React.ReactElement<ShapeConfig, ReactKonvaShapeCtor>
 
 interface GlowProps {
   children: ReactKonvaShapeElement
@@ -28,34 +30,35 @@ interface GlowProps {
   shadowOpacity: number
 }
 
-function Glow({
-  children,
-  color,
-  blurRadius,
-  shadowOpacity,
-}: GlowProps) {
+function Glow({ children, color, blurRadius, shadowOpacity }: GlowProps) {
   const groupRef = useRef<Konva.Group>(null)
-  const shadowRef = useRef<Konva.Shape>(null)
 
   useEffect(() => {
-    const shadow = shadowRef.current
+    const group = groupRef.current
+    if (!group) {
+      return
+    }
+
+    // 对阴影形状应用高斯模糊，并缓存其位图。
+    const childrenNodes = group.getChildren()
+    const shadow = childrenNodes[1] as Konva.Shape | undefined
     if (shadow) {
       shadow.cache()
       shadow.filters([Konva.Filters.Blur])
       shadow.blurRadius(blurRadius * Konva.pixelRatio)
     }
 
-    const group = groupRef.current
-    if (group) {
-      const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
-      const padding = 32 * Konva.pixelRatio
-      group.cache({
-        x: rect.x - padding,
-        y: rect.y - padding,
-        width: rect.width + padding * 2,
-        height: rect.height + padding * 2,
-      })
-    }
+    // 使用局部坐标设置 Group 的缓存区域：
+    // getClientRect 返回的是舞台绝对坐标，需要减去 Group 的绝对位置换算成本地坐标。
+    const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
+    const pos = group.getAbsolutePosition()
+
+    group.cache({
+      x: rect.x - pos.x,
+      y: rect.y - pos.y,
+      width: rect.width,
+      height: rect.height,
+    })
   }, [children, color, blurRadius, shadowOpacity])
 
   const base = React.cloneElement(children, {
@@ -67,9 +70,6 @@ function Glow({
   })
 
   const shadow = React.cloneElement(children, {
-    ref: (node: Konva.Shape | null) => {
-      shadowRef.current = node
-    },
     fill: color,
     shadowColor: color,
     shadowBlur: 32,
@@ -92,11 +92,19 @@ function InnerGlow({
   children,
   color = '#ff751f',
   opacity = 1,
-}: { children: ReactKonvaShapeElement; color?: string; opacity?: number }) {
+}: {
+  children: ReactKonvaShapeElement
+  color?: string
+  opacity?: number
+}) {
   return (
     <Group listening={false} opacity={opacity}>
-      <Glow children={children} color={color} blurRadius={16} shadowOpacity={0.1} />
-      <Glow children={children} color={color} blurRadius={32} shadowOpacity={0.1} />
+      <Glow color={color} blurRadius={16} shadowOpacity={0.1}>
+        {children}
+      </Glow>
+      <Glow color={color} blurRadius={32} shadowOpacity={0.1}>
+        {children}
+      </Glow>
     </Group>
   )
 }
@@ -105,11 +113,19 @@ function OuterGlow({
   children,
   color = '#fffc79',
   opacity = 1,
-}: { children: ReactKonvaShapeElement; color?: string; opacity?: number }) {
+}: {
+  children: ReactKonvaShapeElement
+  color?: string
+  opacity?: number
+}) {
   return (
     <Group listening={false} opacity={opacity}>
-      <Glow children={children} color={color} blurRadius={4} shadowOpacity={1} />
-      <Glow children={children} color={color} blurRadius={8} shadowOpacity={1} />
+      <Glow color={color} blurRadius={4} shadowOpacity={1}>
+        {children}
+      </Glow>
+      <Glow color={color} blurRadius={8} shadowOpacity={1}>
+        {children}
+      </Glow>
     </Group>
   )
 }
@@ -140,8 +156,12 @@ export function AoeEffect({
   return (
     <Group draggable={draggable} opacity={opacity}>
       {base}
-      <InnerGlow children={children} color={innerGlowColor} opacity={innerGlowOpacity} />
-      <OuterGlow children={children} color={outerGlowColor} opacity={outerGlowOpacity} />
+      <InnerGlow color={innerGlowColor} opacity={innerGlowOpacity}>
+        {children}
+      </InnerGlow>
+      <OuterGlow color={outerGlowColor} opacity={outerGlowOpacity}>
+        {children}
+      </OuterGlow>
     </Group>
   )
 }
