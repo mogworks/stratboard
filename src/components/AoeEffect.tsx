@@ -4,8 +4,6 @@ import { Group } from 'react-konva'
 
 export const STROKE_WIDTH = 4
 
-const PADDING = 64
-
 type ReactKonvaExports = typeof import('react-konva')
 type ReactKonvaShapeCtor =
   | ReactKonvaExports['Arc']
@@ -40,24 +38,36 @@ function GlowSlot({
   const shadowRef = useRef<Konva.Shape>(null)
 
   useEffect(() => {
+    // 读取当前 Layer 的 pixelRatio（Konva 自动设置），用于缩放模糊半径与缓存边距
+    const layer = groupRef.current?.getLayer() ?? shadowRef.current?.getLayer() ?? null
+    let pr = 1
+    try {
+      const canvas = layer?.getCanvas?.()
+      const r = canvas?.getPixelRatio?.()
+      if (typeof r === 'number' && r > 0) {
+        pr = r
+      }
+    } catch {}
+
     const shadow = shadowRef.current
     if (shadow) {
       shadow.cache()
       shadow.filters([Konva.Filters.Blur])
-      shadow.blurRadius(blurRadius)
+      shadow.blurRadius(blurRadius * pr)
     }
 
     const group = groupRef.current
     if (group) {
       const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
+      const padding = 32 * pr
       group.cache({
-        x: rect.x - PADDING,
-        y: rect.y - PADDING,
-        width: rect.width + PADDING * 2,
-        height: rect.height + PADDING * 2,
+        x: rect.x - padding,
+        y: rect.y - padding,
+        width: rect.width + padding * 2,
+        height: rect.height + padding * 2,
       })
     }
-  }, [blurRadius, color, shadowOpacity, children])
+  }, [color, blurRadius, shadowOpacity, children])
 
   const base = React.cloneElement(children, {
     fill: color,
@@ -95,8 +105,8 @@ function InnerGlowSlot({
 }: { children: ReactKonvaShapeElement; color?: string }) {
   return (
     <Group listening={false}>
+      <GlowSlot children={children} color={color} blurRadius={16} shadowOpacity={0.1} />
       <GlowSlot children={children} color={color} blurRadius={32} shadowOpacity={0.1} />
-      <GlowSlot children={children} color={color} blurRadius={64} shadowOpacity={0.1} />
     </Group>
   )
 }
@@ -107,8 +117,8 @@ function OuterGlowSlot({
 }: { children: ReactKonvaShapeElement; color?: string }) {
   return (
     <Group listening={false}>
+      <GlowSlot children={children} color={color} blurRadius={4} shadowOpacity={1} />
       <GlowSlot children={children} color={color} blurRadius={8} shadowOpacity={1} />
-      <GlowSlot children={children} color={color} blurRadius={16} shadowOpacity={1} />
     </Group>
   )
 }
