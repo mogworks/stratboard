@@ -1,0 +1,15 @@
+---
+import Layout from '@/layouts/Layout.astro'
+import Footer from '@/components/Footer.astro'
+import DarkModeButton from '@/components/DarkModeButton.astro'
+import ReactKonvaAoeDemo from '@/components/ReactKonvaAoe'
+---
+
+<Layout>
+  <div class="@container relative flex min-h-dvh min-w-sm flex-col items-center">
+    <div class="bg-dots fade-b absolute inset-x-0 top-0 h-48"></div>
+    <DarkModeButton class="fixed top-8 right-8" />
+    <ReactKonvaAoeDemo client:load />
+    <Footer />
+  </div>
+</Layout>
