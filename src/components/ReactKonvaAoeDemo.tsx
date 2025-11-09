@@ -1,46 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { Layer, Ring, Shape, Stage } from 'react-konva'
 
 import { AoeEffect, STROKE_WIDTH } from './AoeEffect'
 
 export default function ReactKonvaAoeDemo() {
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const [size, setSize] = useState({ width: 0, height: 0 })
-
-  useEffect(() => {
-    const updateSize = () => {
-      if (typeof window !== 'undefined') {
-        setSize({ width: window.innerWidth, height: window.innerHeight })
-      } else {
-        const el = containerRef.current
-        if (el) {
-          setSize({ width: el.clientWidth, height: el.clientHeight })
-        }
-      }
-    }
-    updateSize()
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', updateSize)
-      return () => window.removeEventListener('resize', updateSize)
-    }
-    return () => {}
-  }, [])
+  const [center] = useState({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
 
   return (
-    <Stage width={size.width} height={size.height}>
+    <Stage width={window.innerWidth} height={window.innerHeight}>
       <Layer>
         <AoeEffect>
           <Ring
-            x={size.width / 2}
-            y={size.height / 2}
+            x={center.x}
+            y={center.y}
             innerRadius={120 + STROKE_WIDTH / 2}
             outerRadius={200 - STROKE_WIDTH / 2}
           />
         </AoeEffect>
         <AoeEffect>
           <Shape
-            x={size.width / 2 - 130}
-            y={size.height / 2 - 85}
+            x={center.x - 130}
+            y={center.y - 85}
             width={260}
             height={170}
             sceneFunc={function (context, shape) {

@@ -9,7 +9,7 @@ import ReactKonvaAoeDemo from '@/components/ReactKonvaAoeDemo'
   <div class="@container relative flex min-h-dvh min-w-sm flex-col items-center">
     <div class="bg-dots fade-b absolute inset-x-0 top-0 h-48"></div>
     <DarkModeButton class="fixed top-8 right-8" />
-    <ReactKonvaAoeDemo client:load />
+    <ReactKonvaAoeDemo client:only="react" />
     <Footer />
   </div>
 </Layout>

@@ -21,19 +21,19 @@ type ReactKonvaShapeCtor =
 
 type ReactKonvaShapeElement = React.ReactElement<any, ReactKonvaShapeCtor>
 
-interface GlowSlotProps {
+interface GlowProps {
   children: ReactKonvaShapeElement
   color: string
   blurRadius: number
   shadowOpacity: number
 }
 
-function GlowSlot({
+function Glow({
   children,
   color,
   blurRadius,
   shadowOpacity,
-}: GlowSlotProps) {
+}: GlowProps) {
   const groupRef = useRef<Konva.Group>(null)
   const shadowRef = useRef<Konva.Shape>(null)
 
@@ -67,7 +67,7 @@ function GlowSlot({
         height: rect.height + padding * 2,
       })
     }
-  }, [color, blurRadius, shadowOpacity, children])
+  }, [children, color, blurRadius, shadowOpacity])
 
   const base = React.cloneElement(children, {
     fill: color,
@@ -99,26 +99,26 @@ function GlowSlot({
   )
 }
 
-function InnerGlowSlot({
+function InnerGlow({
   children,
   color = '#ff751f',
 }: { children: ReactKonvaShapeElement; color?: string }) {
   return (
     <Group listening={false}>
-      <GlowSlot children={children} color={color} blurRadius={16} shadowOpacity={0.1} />
-      <GlowSlot children={children} color={color} blurRadius={32} shadowOpacity={0.1} />
+      <Glow children={children} color={color} blurRadius={16} shadowOpacity={0.1} />
+      <Glow children={children} color={color} blurRadius={32} shadowOpacity={0.1} />
     </Group>
   )
 }
 
-function OuterGlowSlot({
+function OuterGlow({
   children,
   color = '#fffc79',
 }: { children: ReactKonvaShapeElement; color?: string }) {
   return (
     <Group listening={false}>
-      <GlowSlot children={children} color={color} blurRadius={4} shadowOpacity={1} />
-      <GlowSlot children={children} color={color} blurRadius={8} shadowOpacity={1} />
+      <Glow children={children} color={color} blurRadius={4} shadowOpacity={1} />
+      <Glow children={children} color={color} blurRadius={8} shadowOpacity={1} />
     </Group>
   )
 }
@@ -143,8 +143,8 @@ export function AoeEffect({
   return (
     <Group draggable={draggable}>
       {base}
-      <InnerGlowSlot children={children} color={innerColor} />
-      <OuterGlowSlot children={children} color={outerColor} />
+      <InnerGlow children={children} color={innerColor} />
+      <OuterGlow children={children} color={outerColor} />
     </Group>
   )
 }
