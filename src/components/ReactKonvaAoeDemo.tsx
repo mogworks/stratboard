@@ -17,10 +17,29 @@ export default function ReactKonvaAoeDemo() {
             outerRadius={200 - STROKE_WIDTH / 2}
           />
         </AoeEffect>
+        {/* 整体透明度调整 */}
+        <AoeEffect opacity={0.5}>
+          <Ring
+            x={center.x - 180}
+            y={center.y + 30}
+            innerRadius={80 + STROKE_WIDTH / 2}
+            outerRadius={180 - STROKE_WIDTH / 2}
+          />
+        </AoeEffect>
+        {/* 内部组件透明度调整 */}
+        <AoeEffect baseOpacity={0.125} innerGlowOpacity={0.5} outerGlowOpacity={0.5}>
+          <Ring
+            x={center.x + 110}
+            y={center.y + 70}
+            innerRadius={80 + STROKE_WIDTH / 2}
+            outerRadius={160 - STROKE_WIDTH / 2}
+          />
+        </AoeEffect>
+        {/* 自定义形状 */}
         <AoeEffect>
           <Shape
             x={center.x - 130}
-            y={center.y - 85}
+            y={center.y - 275}
             width={260}
             height={170}
             sceneFunc={function (context, shape) {

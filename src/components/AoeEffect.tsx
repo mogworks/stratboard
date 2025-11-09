@@ -2,7 +2,7 @@ import Konva from 'konva'
 import React, { useEffect, useRef } from 'react'
 import { Group } from 'react-konva'
 
-export const STROKE_WIDTH = 4
+export const STROKE_WIDTH = Konva.pixelRatio * 2
 
 type ReactKonvaExports = typeof import('react-konva')
 type ReactKonvaShapeCtor =
@@ -38,28 +38,17 @@ function Glow({
   const shadowRef = useRef<Konva.Shape>(null)
 
   useEffect(() => {
-    // 读取当前 Layer 的 pixelRatio（Konva 自动设置），用于缩放模糊半径与缓存边距
-    const layer = groupRef.current?.getLayer() ?? shadowRef.current?.getLayer() ?? null
-    let pr = 1
-    try {
-      const canvas = layer?.getCanvas?.()
-      const r = canvas?.getPixelRatio?.()
-      if (typeof r === 'number' && r > 0) {
-        pr = r
-      }
-    } catch {}
-
     const shadow = shadowRef.current
     if (shadow) {
       shadow.cache()
       shadow.filters([Konva.Filters.Blur])
-      shadow.blurRadius(blurRadius * pr)
+      shadow.blurRadius(blurRadius * Konva.pixelRatio)
     }
 
     const group = groupRef.current
     if (group) {
       const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
-      const padding = 32 * pr
+      const padding = 32 * Konva.pixelRatio
       group.cache({
         x: rect.x - padding,
         y: rect.y - padding,
@@ -102,9 +91,10 @@ function Glow({
 function InnerGlow({
   children,
   color = '#ff751f',
-}: { children: ReactKonvaShapeElement; color?: string }) {
+  opacity = 1,
+}: { children: ReactKonvaShapeElement; color?: string; opacity?: number }) {
   return (
-    <Group listening={false}>
+    <Group listening={false} opacity={opacity}>
       <Glow children={children} color={color} blurRadius={16} shadowOpacity={0.1} />
       <Glow children={children} color={color} blurRadius={32} shadowOpacity={0.1} />
     </Group>
@@ -114,9 +104,10 @@ function InnerGlow({
 function OuterGlow({
   children,
   color = '#fffc79',
-}: { children: ReactKonvaShapeElement; color?: string }) {
+  opacity = 1,
+}: { children: ReactKonvaShapeElement; color?: string; opacity?: number }) {
   return (
-    <Group listening={false}>
+    <Group listening={false} opacity={opacity}>
       <Glow children={children} color={color} blurRadius={4} shadowOpacity={1} />
       <Glow children={children} color={color} blurRadius={8} shadowOpacity={1} />
     </Group>
@@ -126,25 +117,31 @@ function OuterGlow({
 export function AoeEffect({
   children,
   draggable = true,
-  color = '#fb923c',
-  opacity = 0.25,
-  innerColor = '#ff751f',
-  outerColor = '#fffc79',
+  opacity = 1,
+  baseColor = '#fb923c',
+  baseOpacity = 0.25,
+  innerGlowColor = '#ff751f',
+  innerGlowOpacity = 1,
+  outerGlowColor = '#fffc79',
+  outerGlowOpacity = 1,
 }: {
   children: ReactKonvaShapeElement
   draggable?: boolean
-  color?: string
   opacity?: number
-  innerColor?: string
-  outerColor?: string
+  baseColor?: string
+  baseOpacity?: number
+  innerGlowColor?: string
+  innerGlowOpacity?: number
+  outerGlowColor?: string
+  outerGlowOpacity?: number
 }) {
-  const base = React.cloneElement(children, { fill: color, opacity })
+  const base = React.cloneElement(children, { fill: baseColor, opacity: baseOpacity })
 
   return (
-    <Group draggable={draggable}>
+    <Group draggable={draggable} opacity={opacity}>
       {base}
-      <InnerGlow children={children} color={innerColor} />
-      <OuterGlow children={children} color={outerColor} />
+      <InnerGlow children={children} color={innerGlowColor} opacity={innerGlowOpacity} />
+      <OuterGlow children={children} color={outerGlowColor} opacity={outerGlowOpacity} />
     </Group>
   )
 }
