@@ -17,6 +17,130 @@ import DarkModeButton from '@/components/DarkModeButton.astro'
   import Konva from 'konva'
 
   const STORKE_WIDTH = 4
+  const PADDING = 64
+
+  function createGlow(
+    shape: Konva.Shape,
+    baseConfig: Konva.ShapeConfig,
+    shadowConfig: Konva.ShapeConfig,
+    blurRadius: number,
+  ) {
+    const group = new Konva.Group()
+
+    const base = shape.clone(baseConfig)
+
+    const shadow = shape.clone(shadowConfig)
+    shadow.cache()
+    shadow.filters([Konva.Filters.Blur])
+    shadow.blurRadius(blurRadius)
+
+    group.add(base)
+    group.add(shadow)
+
+    const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
+    group.cache({
+      x: rect.x - PADDING,
+      y: rect.y - PADDING,
+      width: rect.width + PADDING * 2,
+      height: rect.height + PADDING * 2,
+    })
+
+    return group
+  }
+
+  function createInnerGlow(shape: Konva.Shape, color: string = '#ff751f') {
+    const group = new Konva.Group()
+    group.add(
+      createGlow(
+        shape,
+        {
+          fill: color,
+          stroke: color,
+          strokeWidth: STORKE_WIDTH,
+          opacity: 1,
+        },
+        {
+          fill: color,
+          shadowColor: color,
+          shadowBlur: 32,
+          shadowOpacity: 0.1,
+          shadowOffset: { x: 0, y: 0 },
+          opacity: 1,
+          globalCompositeOperation: 'destination-out',
+        },
+        32,
+      ),
+    )
+    group.add(
+      createGlow(
+        shape,
+        {
+          fill: color,
+          stroke: color,
+          strokeWidth: STORKE_WIDTH,
+          opacity: 1,
+        },
+        {
+          fill: color,
+          shadowColor: color,
+          shadowBlur: 32,
+          shadowOpacity: 0.1,
+          shadowOffset: { x: 0, y: 0 },
+          opacity: 1,
+          globalCompositeOperation: 'destination-out',
+        },
+        48,
+      ),
+    )
+    return group
+  }
+
+  function createOuterGlow(shape: Konva.Shape, color: string = '#fffc79') {
+    const group = new Konva.Group()
+    group.add(
+      createGlow(
+        shape,
+        {
+          fill: color,
+          stroke: color,
+          strokeWidth: STORKE_WIDTH,
+          opacity: 1,
+        },
+        {
+          fill: color,
+          shadowColor: color,
+          shadowBlur: 32,
+          shadowOpacity: 1,
+          shadowOffset: { x: 0, y: 0 },
+          opacity: 1,
+          globalCompositeOperation: 'destination-out',
+        },
+        8,
+      ),
+    )
+    group.add(
+      createGlow(
+        shape,
+        {
+          fill: color,
+          stroke: color,
+          strokeWidth: STORKE_WIDTH,
+          opacity: 1,
+        },
+        {
+          fill: color,
+          shadowColor: color,
+          shadowBlur: 32,
+          shadowOpacity: 1,
+          shadowOffset: { x: 0, y: 0 },
+          opacity: 1,
+          globalCompositeOperation: 'destination-out',
+        },
+        16,
+      ),
+    )
+    return group
+  }
 
   function addRingAoe(x: number, y: number, innerRadius: number, outerRadius: number) {
     const aoe = new Konva.Group({ draggable: true })
@@ -27,94 +151,15 @@ import DarkModeButton from '@/components/DarkModeButton.astro'
       innerRadius: innerRadius + STORKE_WIDTH / 2,
       outerRadius: outerRadius - STORKE_WIDTH / 2,
       fill: '#fb923c',
-      opacity: 0.2,
+      opacity: 0.25,
     })
     aoe.add(ring)
 
     // 内发光：单层内的独立组，组内缓存隔离混合与滤镜
-    const innerGlowGroup = new Konva.Group()
-    aoe.add(innerGlowGroup)
-
-    const innerGlowBase = ring.clone({
-      fill: '#ff751f',
-      stroke: '#ff751f',
-      strokeWidth: STORKE_WIDTH,
-      opacity: 1,
-    })
-
-    const innerGlowShadow = ring.clone({
-      fill: '#ff751f',
-      shadowColor: '#ff751f',
-      shadowBlur: 32,
-      shadowOpacity: 0.1,
-      shadowOffset: { x: 0, y: 0 },
-      opacity: 1,
-      globalCompositeOperation: 'destination-out',
-    })
-
-    innerGlowShadow.cache()
-    innerGlowShadow.filters([Konva.Filters.Blur])
-    innerGlowShadow.blurRadius(48)
-
-    innerGlowGroup.add(innerGlowBase)
-    innerGlowGroup.add(innerGlowShadow)
-
-    // 关键：缓存整个组，确保destination-out和滤镜只在组内发生
-    const pad = 64
-    const innerGlowRect = innerGlowGroup.getClientRect({ skipShadow: false, skipStroke: false })
-    innerGlowGroup.cache({
-      x: innerGlowRect.x - pad,
-      y: innerGlowRect.y - pad,
-      width: innerGlowRect.width + pad * 2,
-      height: innerGlowRect.height + pad * 2,
-    })
+    aoe.add(createInnerGlow(ring))
 
     // 外发光：同样使用单层内的独立组
-    const outerGlowGroup = new Konva.Group()
-    aoe.add(outerGlowGroup)
-
-    const outerGlowBase = ring.clone({
-      fill: '#fffc79',
-      stroke: '#fffc79',
-      strokeWidth: STORKE_WIDTH,
-      opacity: 1,
-    })
-
-    const outerGlowShadow = ring.clone({
-      fill: '#fffc79',
-      shadowColor: '#fffc79',
-      shadowBlur: 32,
-      shadowOpacity: 1,
-      shadowOffset: { x: 0, y: 0 },
-      opacity: 1,
-      globalCompositeOperation: 'destination-out',
-    })
-
-    outerGlowShadow.cache()
-    outerGlowShadow.filters([Konva.Filters.Blur])
-    outerGlowShadow.blurRadius(16)
-
-    outerGlowGroup.add(outerGlowBase)
-    outerGlowGroup.add(outerGlowShadow)
-
-    const outerGlowRect = outerGlowGroup.getClientRect({ skipShadow: false, skipStroke: false })
-    outerGlowGroup.cache({
-      x: outerGlowRect.x - pad,
-      y: outerGlowRect.y - pad,
-      width: outerGlowRect.width + pad * 2,
-      height: outerGlowRect.height + pad * 2,
-    })
-
-    // 可选：加深外发光强度，克隆一份外发光组
-    const outerGlowGroup1 = outerGlowGroup.clone()
-    outerGlowGroup1.clearCache()
-    outerGlowGroup1.cache({
-      x: outerGlowRect.x - pad,
-      y: outerGlowRect.y - pad,
-      width: outerGlowRect.width + pad * 2,
-      height: outerGlowRect.height + pad * 2,
-    })
-    aoe.add(outerGlowGroup1)
+    aoe.add(createOuterGlow(ring))
 
     return aoe
   }
