@@ -48,17 +48,7 @@ function Glow({ children, color, blurRadius, shadowOpacity }: GlowProps) {
       shadow.blurRadius(blurRadius * Konva.pixelRatio)
     }
 
-    // 使用局部坐标设置 Group 的缓存区域：
-    // getClientRect 返回的是舞台绝对坐标，需要减去 Group 的绝对位置换算成本地坐标。
-    const rect = group.getClientRect({ skipShadow: false, skipStroke: false })
-    const pos = group.getAbsolutePosition()
-
-    group.cache({
-      x: rect.x - pos.x,
-      y: rect.y - pos.y,
-      width: rect.width,
-      height: rect.height,
-    })
+    group.cache()
   }, [children, color, blurRadius, shadowOpacity])
 
   const base = React.cloneElement(children, {
